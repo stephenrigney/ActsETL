@@ -1,0 +1,17 @@
+[project]
+name = "actsetl"
+version = "0.1.0"
+description = "A tool to parse Irish Act XML into Akoma Ntoso (LegalDocML) format."
+dependencies = [
+    "lxml",
+    "python-dateutil",
+    "PyYAML",
+]
+
+[project.scripts]
+actsetl = "actsetl.cli:main"
+
+[tool.pylint.main]
+# A comma-separated list of package or module names from C extensions that
+# should be loaded and inspected.
+extension-pkg-allow-list = "lxml"
