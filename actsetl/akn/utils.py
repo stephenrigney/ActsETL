@@ -143,18 +143,26 @@ def akn_write(akn:etree, fn:str, validate:bool=True):
     schema_path = RESOURCES_PATH / 'schemas' / 'akomantoso30.xsd'
     xsd_doc = etree.parse(schema_path)
     xsd = etree.XMLSchema(xsd_doc)
+    xml = etree.tostring(
+        akn, pretty_print=True, 
+        xml_declaration=True, encoding="utf-8"
+        ).decode("utf-8")
     if validate:
         for child in akn.find("act").iter():
             child.tag = f"{{{AKN_NS}}}{child.tag}"
         try:
             xsd.assertValid(akn)
         except etree.DocumentInvalid as exc:
-            print(exc)
-    print("Writing XML")
-    xml = etree.tostring(
-        akn, pretty_print=True, 
-        xml_declaration=True, encoding="utf-8"
-        ).decode("utf-8")
+            logging.error("Invalid XML")
+            for error in exc.error_log:
+                
+                logging.error(
+                    f"  [Line {error.line}, Column {error.column}] Path: {error.path}, Message: {error.message}"
+                    )
+                logging.error(etree.tostring(akn.xpath(error.path)[0]))
+                logging.error("*********")
+    logging.info("Writing XML")
+
     write_xml(xml, fn)
 
 def active_mods(akn: E) -> E:
