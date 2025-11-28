@@ -250,6 +250,7 @@ def parse_section(sect: etree) -> list:
         else:
             hanging = 0
             text = 0
+            margin = 0
             alignment = "left"
         text = "".join(p.xpath(".//text()")).strip()
 
@@ -316,10 +317,10 @@ def parse_section(sect: etree) -> list:
                 ))
         # Before ca. 2010, section and subsection numbers are italicised, eg, "<p>(<i>a</i>)...</p>". 
         # Making editorial decision to remove italicisation for consistency and ease of parsing.
-        i = p.find("i")
-        if p.text == "(" and i is not None and i.tail.startswith(")"):
-            p.text += i.text + i.tail
-            p.remove(i)
+        ital = p.find("i")
+        if p.text == "(" and ital is not None and ital.tail.startswith(")"):
+            p.text += ital.text + ital.tail
+            p.remove(ital)
 
         # Paragraphs are lower case letters in parenthesis - (a), (b), (aab)
         para_re = re.match("^\s?(“?\([a-z]+\))", p.text or "")
@@ -417,8 +418,12 @@ def parse_section(sect: etree) -> list:
                 eid=make_eid_snippet("article", pnumber), 
                 ins=inserted, hang=hanging, margin=margin, align=alignment, xml=make_container(ptype, pnumber, attribs={"eId": eid}), text=None
                 ))
+        is_header_for_table = False
+        if p.tag == 'p' and (i + 1) < len(provs) and provs[i+1].tag == 'table':
+            is_header_for_table = True
+
         #ToDo - better identification of real parts over schedule parts
-        if alignment == "center" and ("PART" in text or "Part" in text or "Chapter" in text or "SCHEDULE" in text):
+        if alignment == "center" and ("PART" in text or "Part" in text or "Chapter" in text or "SCHEDULE" in text) and not is_header_for_table:
             if "part" in text.lower():
                 inserted = True
                 ptype = "part"
@@ -487,7 +492,7 @@ def locate_tag(parent, tags:list):
         if ancestor.tag in tags:
             return ancestor
 
-def append_subdiv(container: etree, modparent: etree, sd: etree, mod: bool) -> etree:
+def append_subdiv(parent_container: etree, modparent: etree, subdiv: namedtuple, mod: bool) -> etree:
     """
     Appends a subdivision to its correct parent in the XML tree.
 
@@ -499,14 +504,15 @@ def append_subdiv(container: etree, modparent: etree, sd: etree, mod: bool) -> e
     :param sd: The Provision object for the subdivision to append.
     :param mod: A flag indicating if currently inside a modification.
     """
-    if container is not None:
-        sd.xml.attrib['eId'] = f"{container.attrib.get('eId')}_{sd.xml.attrib.get('eId')}"
-        container.append(sd.xml)
+    if parent_container is not None:
+        subdiv.xml.attrib['eId'] = f"{parent_container.attrib.get('eId')}_{subdiv.xml.attrib.get('eId')}"
+        logging.debug("Appending %s to %s", subdiv.xml.attrib.get('eId'), parent_container.attrib.get('eId'))
+        parent_container.append(subdiv.xml)
     elif mod:
-        modparent.append(sd.xml)
+        modparent.append(subdiv.xml)
     else:
-        raise ValueError(f"Cannot determine parent for subdivision: {sd.xml.attrib.get('eId')}")
-    parent = sd.xml
+        raise ValueError(f"Cannot determine parent for subdivision: {subdiv.xml.attrib.get('eId')}")
+    parent = subdiv.xml
     pre = parent.getprevious()
     if pre is not None and pre.tag == "content":
         pre.tag = "intro"
@@ -525,14 +531,26 @@ def section_hierarchy(subdivs: list) -> E.section:
 
     mod = False
     modparent = None
-    for idx, sd in enumerate(subdivs[1:]):
-        if sd.tag == "quotestart":
+    i = 1
+    while i < len(subdivs):
+        subdiv = subdivs[i]
+        
+        next_subdiv = subdivs[i + 1] if (i + 1) < len(subdivs) else None
+        is_table_header = (
+            subdiv.tag == 'tblock' and
+            subdiv.xml.tag == 'p' and
+            'text-align:center' in subdiv.xml.attrib.get('style', '') and
+            next_subdiv and
+            next_subdiv.tag == 'table'
+        )
+
+        if subdiv.tag == "quotestart":
             mod = True
             insertparent = parent
-            modparent = parent = sd.xml
-        elif sd.tag == "quoteend":
+            modparent = parent = subdiv.xml
+        elif subdiv.tag == "quoteend":
             try:
-                modparent.attrib['endQuote'] = sd.text
+                modparent.attrib['endQuote'] = subdiv.text
 
                 modblock = E.block(
                     E.mod(
@@ -550,77 +568,83 @@ def section_hierarchy(subdivs: list) -> E.section:
                     "Failed to process quoteend for parent eId '%s'. This may be due to a source typo.", parent.attrib.get("eId")
                 )
 
-        elif sd.tag in ["tblock", "table"]:
-
+        elif subdiv.tag in ["tblock", "table"]:
             content = parent.find("content")
             if parent.attrib.get("eId") and content is None:
                 if parent.tag in ["part", "chapter", "schedule", "division"]:
                     pass
                     
-                parent.append(E.content(sd.xml))
+                parent.append(E.content(subdiv.xml))
             elif content is not None:
-                content.append(sd.xml)
+                content.append(subdiv.xml)
             else:
-                parent.append(sd.xml)
+                parent.append(subdiv.xml)
 
-        elif sd.tag == "schedule":
-            modparent.append(sd.xml)
-            parent = sd.xml
+        elif subdiv.tag == "schedule":
+            modparent.append(subdiv.xml)
+            parent = subdiv.xml
 
-        elif sd.tag == "part":
-            modparent.append(sd.xml)
-            parent = sd.xml
+        elif subdiv.tag == "part":
+            modparent.append(subdiv.xml)
+            parent = subdiv.xml
 
-        elif sd.tag == "chapter":
+        elif subdiv.tag == "chapter":
             tags = ["part"]
             container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, sd, mod)
+            parent = append_subdiv(container, modparent, subdiv, mod)
 
-        elif sd.tag == "section":
+        elif subdiv.tag == "section":
 
             tags = ["chapter", "part"]
             container = locate_tag(parent, tags)
-            pre_p = subdivs[idx].xml
+            pre_p = subdivs[i-1].xml
             if pre_p.tag == "p" and pre_p.find("b") is not None:
                 
                 pre_p.tag = "heading"
-                sd.xml.insert(1, pre_p)
-            parent = append_subdiv(container, modparent, sd, mod)
+                subdiv.xml.insert(1, pre_p)
+            parent = append_subdiv(container, modparent, subdiv, mod)
         
-        elif sd.tag == "subsection":
+        elif subdiv.tag == "subsection":
             tags = ["section"]
             container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, sd, mod)
+            parent = append_subdiv(container, modparent, subdiv, mod)
       
-        elif sd.tag == "paragraph":
+        elif subdiv.tag == "paragraph":
+            logging.debug("Subdiv tag: %s", subdiv.tag)
+            logging.debug("Subdiv parent 1: %s", parent)
+
             tags = ["section", "subsection"]
             container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, sd, mod)
+            logging.debug(container)
+            parent = append_subdiv(container, modparent, subdiv, mod)
+            logging.debug("Subdiv parent 2: %s", parent.get('eId'))
+
             
-        elif sd.tag == "subparagraph":
+        elif subdiv.tag == "subparagraph":
             tags = ["section", "subsection", "paragraph"]
             container = locate_tag(parent, tags)
 
-            parent = append_subdiv(container, modparent, sd, mod)
+            parent = append_subdiv(container, modparent, subdiv, mod)
 
             if parent is None:
               
-                raise ValueError(f"{sd.eid} parent not found")
+                raise ValueError(f"{subdiv.eid} parent not found")
 
-        elif sd.tag == "clause":
+        elif subdiv.tag == "clause":
             tags =  ["section", "subsection", "paragraph", "subparagraph"]
             container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, sd, mod)
+            parent = append_subdiv(container, modparent, subdiv, mod)
 
-        elif sd.tag == "subclause":
+        elif subdiv.tag == "subclause":
             tags =  ["section", "subsection", "paragraph", "subparagraph", "clause"]
             container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, sd, mod)
+            parent = append_subdiv(container, modparent, subdiv, mod)
 
-        elif sd.tag == "article":
+        elif subdiv.tag == "article":
             tags =  ["section", "subsection", "paragraph", "subparagraph", "clause", "subclause"]
             container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, sd, mod)
+            parent = append_subdiv(container, modparent, subdiv, mod)
+        i+=1
 
     for idx, mod in enumerate(sectionparent.xpath(".//mod")):
         parent_eid = sectionparent.attrib['eId']
