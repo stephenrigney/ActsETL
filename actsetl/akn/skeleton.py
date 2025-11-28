@@ -71,14 +71,14 @@ def akn_skeleton(act_meta: etree) -> E:
 
     harp = E.p(
         {"class": "harp"},
-        E.img(src="/static/images/base/harp.jpg")
+        E.img(src="https://www.irishstatutebook.ie/static/images/base/harp.jpg")
         )
     number = E.p(
         {"class": "Number"},
         E.docNumber(
-            E.i("Number"),
+            E.i("Number "),
             act_meta.number,
-            E.i("of"),
+            E.i(" of "),
             act_meta.year
         )
     )
