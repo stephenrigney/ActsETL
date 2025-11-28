@@ -2,13 +2,14 @@
 Python module to generate Akoma Ntoso/LegalDocML XML from eISB XML.
 
 """
-
-import io
+import logging
 from collections import namedtuple
 from pathlib import Path
 
 from lxml import etree
 from lxml.builder import ElementMaker, E
+
+log = logging.getLogger(__name__)
 
 
 AKN_SCHEMA_LOCATION = "http://docs.oasis-open.org/legaldocml/ns/akn/3.0 http://docs.oasis-open.org/legaldocml/akn-core/v1.0/cos01/part2-specs/schemas/akomantoso30.xsd"
@@ -110,6 +111,7 @@ def pop_styles(akn: etree):
     :return: Description
     :rtype: etree
     """ 
+    log.info("Removing style attributes")
     for elem in akn.xpath("//*[@style]"):
         elem.attrib.pop("style")
     return akn

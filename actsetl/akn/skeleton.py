@@ -2,7 +2,7 @@
 Python module to generate LegalDocML XML from eISB XML.
 
 """
-
+import logging
 from datetime import datetime as dt
 from copy import deepcopy
 
@@ -10,6 +10,9 @@ from lxml.builder import E
 from lxml import etree
 
 from .utils import eli_uri_fragment, date_suffix
+
+log = logging.getLogger(__name__)
+
 
 def akn_skeleton(act_meta: etree) -> E:
     """

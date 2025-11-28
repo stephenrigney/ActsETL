@@ -2,6 +2,7 @@
 Command-line interface for ActsETL.
 """
 
+import logging
 import argparse
 import yaml
 
@@ -26,7 +27,24 @@ def main():
     parser.add_argument("--notes", default=None, help="Path to the notes YAML file.")
     parser.add_argument("--styles", action="store_false", help="Remove styles.")   
     parser.add_argument("--no-validate", action="store_true", help="Disable XML schema validation.")
+    parser.add_argument(
+        "--loglevel",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Set the logging level (default: INFO)",
+    )
+    parser.add_argument("--logfile", help="Path to a file to write logs to.")
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=args.loglevel,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        filename=args.logfile
+    )
+    log = logging.getLogger(__name__)
+
+    log.info("Starting processing for %s", args.input_xml)
 
     preprocessed_eisb_xml = transform_xml(args.input_xml)
     xml_parser = etree.XMLParser(remove_blank_text=True)
@@ -55,6 +73,8 @@ def main():
         akn_notes(akn_act_root, notes)
 
     akn_write(akn_act_root, args.output_akn, validate=not args.no_validate)
+    log.info("Successfully wrote output to %s", args.output_akn)
+
 
 if __name__ == "__main__":
     main()

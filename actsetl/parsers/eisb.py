@@ -2,7 +2,7 @@
 Python module to parse Irish Act XML into LegalDocML.
 
 """
-
+import logging
 import re
 import io
 from collections import namedtuple
@@ -16,6 +16,8 @@ from actsetl.akn.utils import (
     akn_write, akn_root, akn_notes, active_mods, )
 from actsetl.akn.skeleton import akn_skeleton
 
+
+log = logging.getLogger(__name__)
 
 RESOURCES_PATH = Path(__file__).parent.parent / 'resources'
 XSLT_PATH = RESOURCES_PATH / 'xslt' / 'eisb_transform.xslt'
@@ -230,8 +232,8 @@ def parse_section(sect: etree) -> list:
     # Flag to avoid misclassifying paragraph numbers i, v, x as subparagraphs by checking preceding letter.
     # If preceding letter is h, u or w classify i, v or x as paragraph.
     # ToDo: will be wrong if a subparagraph is nested within a paragraph numbered h, u or w.
-    is_huw = False
-    print("SECTION", snumber)
+    is_huw = False    
+    log.info("Parsing section %s", snumber)
     eid = make_eid_snippet("sect", snumber)
     sect = make_container(ptype, num=E.b(snumber), heading=sheading, attribs={"eId": eid})
     subdivs.append(
@@ -542,12 +544,11 @@ def section_hierarchy(subdivs: list) -> E.section:
                 parent.find("content").append(modblock)
                 modparent = None
                 mod = False
-            except AttributeError as exc:
+            except AttributeError:
                 # this is caused by a typo in section 46(2) of FA2022, which incorrectly ends with '”.'
-                print(subdivs[idx])
-                print(parent.attrib["eId"])
-                print(sd)
-                print(exc)
+                log.exception(
+                    "Failed to process quoteend for parent eId '%s'. This may be due to a source typo.", parent.attrib.get("eId")
+                )
 
         elif sd.tag in ["tblock", "table"]:
 
@@ -719,7 +720,7 @@ def act_metadata(act: etree) -> namedtuple:
     ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
     metadata = act.find("metadata")
     short_title = metadata.find("title").text
-    print(short_title)
+    log.info("Parsing metadata for: %s", short_title)
     number = metadata.find("number").text
     year = metadata.find("year").text
     doe = metadata.find("dateofenactment").text
