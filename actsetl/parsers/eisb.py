@@ -13,7 +13,7 @@ from lxml.builder import E
 from dateutil.parser import parse as dtparse
 
 from actsetl.akn.utils import (
-    akn_write, akn_root, akn_notes, active_mods, )
+    akn_write, akn_root, akn_notes, active_mods, parsing_errors_writer )
 from actsetl.akn.skeleton import akn_skeleton
 
 
@@ -468,7 +468,7 @@ def parse_section(sect: etree) -> list:
             ins=inserted, hang=hanging, margin=margin, align=alignment, xml=p, text="".join(p.xpath(".//text()"))
             ))
         # End quote for inserted text       
-        if len(text) > 1 and text[-2] == "”" and ("“" not in text[1:] or len(text) == 2):
+        if len(text) > 1 and text[-2] == "”":
             inserted = True
             subdivs.append(
                 Provision(
@@ -486,11 +486,24 @@ def locate_tag(parent, tags:list):
     :param tags: Description
     :type tags: list
     """
+    logging.debug("Finding parent of element from %s, with tags %s", parent, tags)
     if parent.tag in tags:
+        # logging.debug("Parent is %s", parent.tag)
         return parent
+    
+    curr = parent.getparent()
+    while curr is not None:
+        if curr.tag in tags:
+            return curr
+        curr = curr.getparent()
+
+    logging.debug("Ancestors are %s", list(parent.iterancestors()))
     for ancestor in parent.iterancestors(tags):
+        logging.debug("Ancestor iter is %s", ancestor.tag)
         if ancestor.tag in tags:
+            logging.debug("Ancestor parent is %s", ancestor.tag)
             return ancestor
+    return None
 
 def append_subdiv(parent_container: etree, modparent: etree, subdiv: namedtuple, mod: bool) -> etree:
     """
@@ -501,22 +514,28 @@ def append_subdiv(parent_container: etree, modparent: etree, subdiv: namedtuple,
 
     :param container: The standard hierarchical parent element.
     :param modparent: The parent for modified/inserted content.
-    :param sd: The Provision object for the subdivision to append.
+    :param subdiv: The Provision object for the subdivision to append.
     :param mod: A flag indicating if currently inside a modification.
     """
+    pre_target = None
     if parent_container is not None:
         subdiv.xml.attrib['eId'] = f"{parent_container.attrib.get('eId')}_{subdiv.xml.attrib.get('eId')}"
-        logging.debug("Appending %s to %s", subdiv.xml.attrib.get('eId'), parent_container.attrib.get('eId'))
+        # logging.debug("Appending %s to %s", subdiv.xml.attrib.get('eId'), parent_container.attrib.get('eId'))
         parent_container.append(subdiv.xml)
+        pre_target = parent_container
     elif mod:
         modparent.append(subdiv.xml)
+        pre_target = modparent
     else:
-        raise ValueError(f"Cannot determine parent for subdivision: {subdiv.xml.attrib.get('eId')}")
+        raise ValueError(
+            f"Cannot determine parent for subdivision: {subdiv.xml.attrib.get('eId')}"
+            )
+    
     parent = subdiv.xml
     pre = parent.getprevious()
     if pre is not None and pre.tag == "content":
         pre.tag = "intro"
-    return parent
+    return pre_target
 
 def section_hierarchy(subdivs: list) -> E.section:
     """
@@ -531,10 +550,10 @@ def section_hierarchy(subdivs: list) -> E.section:
 
     mod = False
     modparent = None
+    outerparent = None
     i = 1
     while i < len(subdivs):
         subdiv = subdivs[i]
-        
         next_subdiv = subdivs[i + 1] if (i + 1) < len(subdivs) else None
         is_table_header = (
             subdiv.tag == 'tblock' and
@@ -544,10 +563,26 @@ def section_hierarchy(subdivs: list) -> E.section:
             next_subdiv.tag == 'table'
         )
 
+
+        if (
+            subdivs[0].eid == "sect_76" and 
+            subdiv.eid == "para_c" and
+            etree.tostring(subdiv.xml) == b'<paragraph eId="para_c"><num>(c)</num></paragraph>'):
+            logging.info(
+                "Parent eId: %s, previous eId: %s,current eId: %s", 
+                parent.attrib.get("eId"),
+                subdivs[i-1].eid,
+                subdiv.eid,
+            )
+            parsing_errors_writer(sectionparent)
+
         if subdiv.tag == "quotestart":
             mod = True
-            insertparent = parent
+            outerparent = parent
+
+            logging.debug("Quotestart outerparent: %s", outerparent)
             modparent = parent = subdiv.xml
+            logging.debug("Quote end modparent: %s", modparent)
         elif subdiv.tag == "quoteend":
             try:
                 modparent.attrib['endQuote'] = subdiv.text
@@ -558,8 +593,13 @@ def section_hierarchy(subdivs: list) -> E.section:
                     ),
                     {"name": "quotedStructure"}
                 )
-                parent = insertparent
-                parent.find("content").append(modblock)
+                parent = outerparent
+                logging.debug("Quoteend parent: %s", parent)
+                content = parent.find("content")
+                if content is None:
+                    content = E.content()
+                    parent.append(content)
+                content.append(modblock)
                 modparent = None
                 mod = False
             except AttributeError:
@@ -567,6 +607,10 @@ def section_hierarchy(subdivs: list) -> E.section:
                 log.exception(
                     "Failed to process quoteend for parent eId '%s'. This may be due to a source typo.", parent.attrib.get("eId")
                 )
+
+        elif mod:
+            if subdiv.xml is not None:
+                modparent.append(subdiv.xml)
 
         elif subdiv.tag in ["tblock", "table"]:
             content = parent.find("content")
@@ -610,15 +654,12 @@ def section_hierarchy(subdivs: list) -> E.section:
             parent = append_subdiv(container, modparent, subdiv, mod)
       
         elif subdiv.tag == "paragraph":
-            logging.debug("Subdiv tag: %s", subdiv.tag)
-            logging.debug("Subdiv parent 1: %s", parent)
 
             tags = ["section", "subsection"]
             container = locate_tag(parent, tags)
-            logging.debug(container)
-            parent = append_subdiv(container, modparent, subdiv, mod)
-            logging.debug("Subdiv parent 2: %s", parent.get('eId'))
 
+
+            parent = append_subdiv(container, modparent, subdiv, mod)
             
         elif subdiv.tag == "subparagraph":
             tags = ["section", "subsection", "paragraph"]
@@ -627,7 +668,7 @@ def section_hierarchy(subdivs: list) -> E.section:
             parent = append_subdiv(container, modparent, subdiv, mod)
 
             if parent is None:
-              
+                parsing_errors_writer(parent.getroot())
                 raise ValueError(f"{subdiv.eid} parent not found")
 
         elif subdiv.tag == "clause":
@@ -644,6 +685,7 @@ def section_hierarchy(subdivs: list) -> E.section:
             tags =  ["section", "subsection", "paragraph", "subparagraph", "clause", "subclause"]
             container = locate_tag(parent, tags)
             parent = append_subdiv(container, modparent, subdiv, mod)
+
         i+=1
 
     for idx, mod in enumerate(sectionparent.xpath(".//mod")):
@@ -655,7 +697,7 @@ def section_hierarchy(subdivs: list) -> E.section:
             el.attrib['eId'] = f"{mod_eid}_{el.attrib['eId']}"
     return sectionparent
 
-def parse_body(parent: etree, pxml: E, toc: E) -> tuple:
+def parse_body(eisb_parent: etree, akn_parent: E, toc: E) -> tuple:
     """
     Build out the LegalDocML skeleton (pxml) with content from eISB XML (parent).
 
@@ -677,19 +719,19 @@ def parse_body(parent: etree, pxml: E, toc: E) -> tuple:
     :return: Description
     :rtype: tuple
     """
-    for i, subdiv in enumerate(parent.getchildren()):
+    for i, subdiv in enumerate(eisb_parent.getchildren()):
 
         if subdiv.tag == "sect":
             subdivs = parse_section(subdiv)
             sxml = section_hierarchy(subdivs)
 
-            pxml.append(
+            akn_parent.append(
                 sxml
             )
             level = 1
-            if parent.tag == "part":
+            if eisb_parent.tag == "part":
                 level += 1
-            if parent.tag == "chapter":
+            if eisb_parent.tag == "chapter":
                 level += 2
 
             toc.append(
@@ -710,7 +752,7 @@ def parse_body(parent: etree, pxml: E, toc: E) -> tuple:
             subdivxml = E(
                 subdiv.tag, E.num(number), sdheading, {"eId": eid}
                 )
-            pxml.append(subdivxml)
+            akn_parent.append(subdivxml)
             if subdivxml.tag in tags[1:]:
                 subdivxml.attrib['eId'] = f"{subdivxml.getparent().attrib['eId']}_{subdivxml.attrib['eId']}"
             if subdiv.tag == "part":
@@ -729,7 +771,7 @@ def parse_body(parent: etree, pxml: E, toc: E) -> tuple:
             )
             
             divs = parse_body(subdiv, subdivxml, toc)
-    return pxml, toc
+    return akn_parent, toc
 
 def act_metadata(act: etree) -> namedtuple: 
     """
