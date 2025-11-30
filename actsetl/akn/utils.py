@@ -165,6 +165,11 @@ def akn_write(akn:etree, fn:str, validate:bool=True):
 
     write_xml(xml, fn)
 
+def parsing_errors_writer(akn:etree):
+    fn = "data/errors/parsing_errors.xml"
+    write_xml(etree.tostring(akn, pretty_print=True).decode("utf-8"), fn)
+
+
 def active_mods(akn: E) -> E:
     """
     Records ActiveMod metadata under meta/analysis.
