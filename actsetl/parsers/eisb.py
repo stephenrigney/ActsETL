@@ -27,6 +27,8 @@ ODQ, CDQ, OSQ, CSQ = "“", "”", '‘', '’'
 
 # Data structure to hold parsed amendment metadata
 AmendmentMetadata = namedtuple("AmendmentMetadata", "type source_eId destination_uri position old_text new_text")
+ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
+
 
 class AmendmentParser:
     """A state machine for parsing amendments."""
@@ -338,7 +340,8 @@ def parse_section(sect: etree):
         b = p.find("./b")
         if b is not None and b.tail is not None:
             etree.strip_elements(p, 'b', with_tail=False)
-            if hanging + margin > 8: ptype, inserted, pnumber, p_eid = "section", True, b.text.strip(), make_eid_snippet("sect", b.text.strip())
+            if hanging + margin > 8:
+                ptype, inserted, pnumber, p_eid = "section", True, b.text.strip(), make_eid_snippet("sect", b.text.strip())
         
         subsect_re = re.match(r"^\s?(“?\(\d+[A-Z]*\))", p.text or "")
         if subsect_re:
@@ -355,8 +358,10 @@ def parse_section(sect: etree):
         if para_re:
             pnumber = para_re.group(1)
             eid_number = "".join(d for d in pnumber if d.isalnum())
-            if margin == 14: ptype = "paragraph"
-            elif eid_number[0] in "ivx" and (margin == 17 or not is_huw): ptype = "subparagraph"
+            if margin == 14: 
+                ptype = "paragraph"
+            elif eid_number[0] in "ivx" and (margin == 17 or not is_huw):
+                ptype = "subparagraph"
             else: ptype = "paragraph"
             p.text = p.text[para_re.end():].lstrip()
             p_eid = make_eid_snippet("para" if ptype == "paragraph" else "subpara", pnumber)
@@ -443,74 +448,104 @@ def section_hierarchy(subdivs: list) -> E.section:
     for subdiv in subdivs[1:]:
         if subdiv.tag == "mod_block":
             container = parent.find("content")
-            if container is None: container = E.content(); parent.append(container)
+            if container is None:
+                container = E.content(); parent.append(container)
             container.append(subdiv.xml)
         elif subdiv.tag in ["tblock", "table"]:
             container = parent.find("content")
-            if container is None: container = E.content(); parent.append(container)
+            if container is None:
+                container = E.content(); parent.append(container)
             container.append(subdiv.xml)
         else:
             # Hierarchy logic based on tag
-            if subdiv.tag == "subsection": tags = ["section"]
-            elif subdiv.tag == "paragraph": tags = ["section", "subsection"]
-            elif subdiv.tag == "subparagraph": tags = ["section", "subsection", "paragraph"]
-            elif subdiv.tag == "clause": tags = ["section", "subsection", "paragraph", "subparagraph"]
-            elif subdiv.tag == "subclause": tags = ["section", "subsection", "paragraph", "subparagraph", "clause"]
-            else: tags = ["part", "chapter", "section", "subsection", "paragraph", "subparagraph", "clause", "subclause"]
+            if subdiv.tag == "subsection":
+                tags = ["section"]
+            elif subdiv.tag == "paragraph":
+                tags = ["section", "subsection"]
+            elif subdiv.tag == "subparagraph": 
+                tags = ["section", "subsection", "paragraph"]
+            elif subdiv.tag == "clause": 
+                tags = ["section", "subsection", "paragraph", "subparagraph"]
+            elif subdiv.tag == "subclause": 
+                tags = ["section", "subsection", "paragraph", "subparagraph", "clause"]
+            else: 
+                tags = ["part", "chapter", "section", "subsection", "paragraph", "subparagraph", "clause", "subclause"]
             
             container = locate_tag(parent, tags) or sectionparent
             parent = append_subdiv(container, subdiv)
     return sectionparent
 
-def parse_body(eisb_parent: etree, akn_parent: E, toc: E) -> tuple:
+def parse_body(eisb_parent: etree, akn_parent: E) -> tuple:
     """
     Build out the LegalDocML skeleton with content from eISB XML.
     """
     all_mod_info = []
-    top_level_tags = ["part", "chapter", "division"]
-    for subdiv in eisb_parent.getchildren():
-        if subdiv.tag == "sect":
-            subdivs, mod_info = parse_section(subdiv)
+    toplevel_tags = ["part", "chapter", "division"]
+    for eisb_subdiv in eisb_parent.getchildren():
+        if eisb_subdiv.tag == "sect":
+            akn_section_subdivs, mod_info = parse_section(eisb_subdiv)
             all_mod_info.extend(mod_info)
-            sxml = section_hierarchy(subdivs)
-            if sxml is not None: akn_parent.append(sxml)
+            akn_section = section_hierarchy(akn_section_subdivs)
+            if akn_section is not None:
+                akn_parent.append(akn_section)
             
-            level = 1 + (1 if eisb_parent.tag == "part" else 0) + (2 if eisb_parent.tag == "chapter" else 0)
-            toc.append(
-                E.tocItem(
-                    {"level": str(level), "class": "section", "href": f"#{sxml.attrib['eId']}"},
-                    E.inline({"name": "tocNum"}, sxml.findtext("./num/b")),
-                    E.inline({"name": "tocHeading"}, "".join(sxml.xpath("./heading//text()")))
-                )
-            )
         
-        elif subdiv.tag in top_level_tags:
-            title = subdiv.find("title").getchildren()
-            number, sdheading_p = "".join(title[0].xpath(".//text()")), title[1]
-            sdheading = parse_p(sdheading_p); sdheading.tag = "heading"
-            eid = make_eid_snippet(subdiv.tag, number.split(" ")[-1])
-            subdivxml = E(subdiv.tag, E.num(number), sdheading, {"eId": eid})
-            akn_parent.append(subdivxml)
-            if subdivxml.tag in top_level_tags[1:]:
-                subdivxml.attrib['eId'] = f"{subdivxml.getparent().attrib['eId']}_{subdivxml.attrib['eId']}"
-            
-            level = "1" if subdiv.tag == "part" else "2" if subdiv.tag == "chapter" else "3"
-            toc.append(
-                E.tocItem(
-                    {"level": level, "class": subdiv.tag, "href": f"#{eid}"},
-                    E.inline({"name": "tocNum"}, number),
-                    E.inline({"name": "tocHeading"}, "".join(sdheading.xpath(".//text()")))
+        elif eisb_subdiv.tag in toplevel_tags:
+            title = eisb_subdiv.find("title").getchildren()
+            number = "".join(title[0].xpath(".//text()"))
+            sdheading_p = title[1]
+            sdheading = parse_p(sdheading_p)
+            sdheading.tag = "heading"
+            eid = make_eid_snippet(eisb_subdiv.tag, number.split(" ")[-1])
+            akn_toplevel_elem = E(
+                eisb_subdiv.tag, E.num(number), sdheading, {"eId": eid}
                 )
-            )
-            _, _, mod_info = parse_body(subdiv, subdivxml, toc)
+            akn_parent.append(akn_toplevel_elem)
+            if akn_toplevel_elem.tag in toplevel_tags[1:]:
+                akn_toplevel_elem.attrib['eId'] = f"{akn_toplevel_elem.getparent().attrib['eId']}_{akn_toplevel_elem.attrib['eId']}"
+            
+
+            _, mod_info = parse_body(eisb_subdiv, akn_toplevel_elem)
             all_mod_info.extend(mod_info)
-    return akn_parent, toc, all_mod_info
+    return akn_parent, all_mod_info
+
+def generate_toc(act: etree) -> E:
+    """
+    Generate the TOC for the Act.
+    """
+    toc = E.toc()
+    eisb_parent = act.find("body")
+    sxml = eisb_parent.find("sect")
+    level = 1 + (1 if eisb_parent.tag == "part" else 0) + (2 if eisb_parent.tag == "chapter" else 0)
+    toc.append(
+        E.tocItem(
+            {"level": str(level), "class": "section", "href": f"#{sxml.attrib['eId']}"},
+            E.inline({"name": "tocNum"}, sxml.findtext("./num/b")),
+            E.inline({"name": "tocHeading"}, "".join(sxml.xpath("./heading//text()")))
+        )
+    )
+
+    level = "1" if subdiv.tag == "part" else "2" if subdiv.tag == "chapter" else "3"
+    toc.append(
+        E.tocItem(
+            {"level": level, "class": subdiv.tag, "href": f"#{eid}"},
+            E.inline({"name": "tocNum"}, number),
+            E.inline({"name": "tocHeading"}, "".join(sdheading.xpath(".//text()")))
+        )
+    )
+
+    toc.append(
+        E.tocItem(
+            {"level": "1", "class": "schedule", "href": f"#{eid}"},
+            E.inline({"name": "tocNum"}, number),
+            E.inline({"name": "tocHeading"}, heading)
+        )
+    )
 
 def act_metadata(act: etree) -> namedtuple: 
     """
     Parses Act metadata from eISB Act XML and returns as a named tuple.
     """
-    ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
     metadata = act.find("metadata")
     short_title, number, year = metadata.findtext("title"), metadata.findtext("number"), metadata.findtext("year")
     log.info("Parsing metadata for: %s", short_title)
@@ -523,19 +558,14 @@ def parse_schedule(root, act):
     """
     Schedules may contain a wide range of content types.
     """
-    body, toc = act.find("./body"), act.find("./coverPage/toc")
+    body = act.find("./body")
     for idx, sch in enumerate(root.xpath("./backmatter/schedule")):
-        number, heading = "".join(sch.xpath("./title/p[1]//text()")), "".join(sch.xpath("./title/p[2]//text()"))
+        number ="".join(sch.xpath("./title/p[1]//text()"))
+        heading = "".join(sch.xpath("./title/p[2]//text()"))
         eid = f"sched_{idx+1}"
         schedule = E.hcontainer({"name": "schedule", "eId": eid}, E.num(number), E.heading(heading), E.content())
         body.append(schedule)
-        toc.append(
-            E.tocItem(
-                {"level": "1", "class": "schedule", "href": f"#{eid}"},
-                E.inline({"name": "tocNum"}, number),
-                E.inline({"name": "tocHeading"}, heading)
-            )
-        )
+
         for p in sch.xpath("./p|./table"):
             schedule.find("content").append(parse_p(p) if p.tag == "p" else parse_table(p))
     return body
@@ -568,3 +598,4 @@ def build_active_modifications(mod_info_list: list) -> E:
         if meta.new_text: textual_mod.append(E.new(meta.new_text))
         active_mods_elem.append(textual_mod)
     return active_mods_elem
+

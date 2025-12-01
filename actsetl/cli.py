@@ -57,9 +57,9 @@ def main():
     akn_act = akn_skeleton(akn_act_meta)
 
     # Refactored call to parse_body to capture amendment metadata
-    _, _, all_mod_info = parse_body(
-        eisb_act.find("body"), akn_act.find("./body"), akn_act.find("./coverPage/toc")
-    )
+    _, all_mod_info = parse_body(
+        eisb_act.find("body"), akn_act.find("./body")
+            )
     parse_schedule(eisb_act, akn_act)
     fix_headings(akn_act)
 
