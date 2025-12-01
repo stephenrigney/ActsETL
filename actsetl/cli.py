@@ -8,10 +8,13 @@ import yaml
 
 from lxml import etree
 
-from actsetl.parsers.eisb import act_metadata, parse_body, parse_schedule, fix_headings, transform_xml
+from actsetl.parsers.eisb import (
+    act_metadata, parse_body, parse_schedule, 
+    fix_headings, transform_xml, build_active_modifications
+)
 from actsetl.akn.skeleton import akn_skeleton
 from actsetl.akn.utils import (
-    akn_root, akn_notes, active_mods, akn_write, pop_styles
+    akn_root, akn_notes, akn_write, pop_styles
 )
 
 
@@ -53,7 +56,10 @@ def main():
     akn_act_meta = act_metadata(eisb_act)
     akn_act = akn_skeleton(akn_act_meta)
 
-    parse_body(eisb_act.find("body"), akn_act.find("./body"), akn_act.find("./coverPage/toc"))
+    # Refactored call to parse_body to capture amendment metadata
+    _, _, all_mod_info = parse_body(
+        eisb_act.find("body"), akn_act.find("./body"), akn_act.find("./coverPage/toc")
+    )
     parse_schedule(eisb_act, akn_act)
     fix_headings(akn_act)
 
@@ -65,7 +71,19 @@ def main():
     #ToDo - cited legislation
     if args.styles:
         pop_styles(akn_act_root)
-    active_mods(akn_act_root)
+
+    # New logic to build and insert the <activeModifications> block
+    if all_mod_info:
+        log.info("Building active modifications block.")
+        analysis_block = akn_act.find("./meta/analysis")
+        if analysis_block is not None:
+            # Remove the placeholder created by the skeleton
+            existing_active_mods = analysis_block.find("activeModifications")
+            if existing_active_mods is not None:
+                analysis_block.remove(existing_active_mods)
+            
+            active_mods_elem = build_active_modifications(all_mod_info)
+            analysis_block.append(active_mods_elem)
 
     if args.notes is not None:
         with open(args.notes, encoding="utf-8") as f:

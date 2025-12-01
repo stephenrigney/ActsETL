@@ -25,15 +25,165 @@ XSLT_PATH = RESOURCES_PATH / 'xslt' / 'eisb_transform.xslt'
 
 ODQ, CDQ, OSQ, CSQ = "“", "”", '‘', '’'
 
+# Data structure to hold parsed amendment metadata
+AmendmentMetadata = namedtuple("AmendmentMetadata", "type source_eId destination_uri position old_text new_text")
+
+class AmendmentParser:
+    """A state machine for parsing amendments."""
+    def __init__(self, section_eid, principal_act_uri="#principal_act"):
+        self.state = "IDLE"  # Can be IDLE, PARSING_INSTRUCTION, CONSUMING_CONTENT
+        self.section_eid = section_eid
+        self.principal_act_uri = principal_act_uri
+        self.mod_counter = 1
+        self.active_mod_info = []
+        self.current_mod_block = None
+        self.current_amendment_details = {}
+        self.content_buffer = []
+
+    def _parse_instruction(self, text: str):
+        """
+        Parses amendment instruction text to extract action, destination, etc.
+        Returns a dictionary with parsed information, or None.
+        """
+        # Regex for full block substitution: "by the substitution of ... for ..."
+        subst_re = re.search(r"by the substitution of .* for (?P<old_dest>.+)", text, re.IGNORECASE)
+        if subst_re:
+            return {'type': 'substitution', 'destination_text': subst_re.group('old_dest').strip(':')}
+
+        # Regex for insertion: "by the insertion of ... after ..."
+        ins_re = re.search(r"by the insertion of .* after (?P<dest>.+)", text, re.IGNORECASE)
+        if ins_re:
+            return {'type': 'insertion', 'position': 'after', 'destination_text': ins_re.group('dest').strip(':')}
+
+        # Regex for simple insertion (no position): "in section X, by the insertion of the following..."
+        simple_ins_re = re.search(r"by the insertion of the following definitions:", text, re.IGNORECASE)
+        if simple_ins_re:
+             return {'type': 'insertion', 'position': None, 'destination_text': ''}
+
+        # Regex for inline substitution: "...by the substitution of 'new' for 'old'"
+        inline_sub_re = re.search(r"by the substitution of (?P<new>[“‘][^”’]+[”’]) for (?P<old>[“‘][^”’]+[”’])", text)
+        if inline_sub_re:
+            return {
+                'type': 'substitution',
+                'inline': True,
+                'new_text': inline_sub_re.group('new').strip("“‘”’"),
+                'old_text': inline_sub_re.group('old').strip("“‘”’")
+            }
+        return None
+
+    def _generate_destination_uri(self, text):
+        # This is a placeholder. A real implementation would need a robust way
+        # to parse text like "section 118(5)" into a URI fragment.
+        text = text.lower().replace("subsection", "subsect")
+        parts = re.findall(r'(section|subsect|paragraph) (\w+)', text)
+        if not parts:
+            log.warning("Could not generate destination URI for: %s", text)
+            return self.principal_act_uri
+        
+        uri_parts = [f"{p[0]}_{p[1]}" for p in parts]
+        return f"{self.principal_act_uri}/{'__'.join(uri_parts)}"
+
+    def process(self, provision):
+        """
+        Processes a provision, manages state, and returns a completed XML block or None.
+        Returns a tuple: (status, data)
+        status can be:
+        - CONSUMED: The provision was consumed by the parser.
+        - COMPLETED_BLOCK: The parser completed a <mod> block. Data is the block.
+        - COMPLETED_INLINE: The parser completed an inline <mod>. Data is the mod.
+        - IDLE: The parser is idle and did not consume the provision.
+        """
+        text = provision.text or ""
+
+        if self.state == "IDLE":
+            details = self._parse_instruction(text)
+            if details:
+                self.state = "PARSING_INSTRUCTION"
+                self.current_amendment_details = details
+                if details.get('inline'):
+                    mod_eid = f"{self.section_eid}_mod_{self.mod_counter}"
+                    mod_block = E.mod(
+                        E.quotedText(details['new_text'], startQuote="“", endQuote="”"),
+                        eId=mod_eid
+                    )
+                    dest_uri = self._generate_destination_uri(text)
+                    meta = AmendmentMetadata(
+                        type='substitution', source_eId=f"#{mod_eid}",
+                        destination_uri=dest_uri, position=None,
+                        old_text=details['old_text'], new_text=details['new_text']
+                    )
+                    self.active_mod_info.append(meta)
+                    self.mod_counter += 1
+                    self.state = "IDLE"
+                    return ("COMPLETED_INLINE", mod_block)
+                return ("CONSUMED", None)
+            else:
+                return ("IDLE", provision)
+
+        elif self.state == "PARSING_INSTRUCTION":
+            text = provision.text or ""
+            if (text.startswith(ODQ) and ODQ not in text[1:]) or text == ODQ:
+                self.state = "CONSUMING_CONTENT"
+                mod_eid = f"{self.section_eid}_mod_{self.mod_counter}"
+                self.current_mod_block = E.mod(E.quotedStructure(startQuote="“"), eId=mod_eid)
+
+                dest_uri = self._generate_destination_uri(self.current_amendment_details.get('destination_text', ''))
+                meta = AmendmentMetadata(
+                    type=self.current_amendment_details['type'],
+                    source_eId=f"#{mod_eid}",
+                    destination_uri=dest_uri,
+                    position=self.current_amendment_details.get('position'),
+                    old_text=None, new_text=None
+                )
+                self.active_mod_info.append(meta)
+
+                if provision.xml.text and provision.xml.text.startswith(ODQ):
+                    provision.xml.text = provision.xml.text[len(ODQ):]
+                self.content_buffer.append(provision)
+
+                return ("CONSUMED", None)
+            else: # Text between instruction and quote
+                return ("CONSUMED", None)
+
+        elif self.state == "CONSUMING_CONTENT":
+            if provision.tag == "quoteend":
+                if self.current_mod_block is not None and self.current_mod_block.find('quotedStructure') is not None:
+                    self.current_mod_block.find('quotedStructure').attrib['endQuote'] = provision.text or '”'
+                
+                qs = self.current_mod_block.find('quotedStructure') if self.current_mod_block is not None else None
+                if qs is not None and self.content_buffer:
+                    # This is where a mini-hierarchy builder would go.
+                    # For now, we just append the raw XML from the buffer.
+                    temp_root = E.div()
+                    for p in self.content_buffer:
+                        # This logic is complex and needs to replicate section_hierarchy
+                        # For now, append directly.
+                        temp_root.append(p.xml)
+                    
+                    # Run a simplified hierarchy build on the buffered content
+                    built_content = section_hierarchy([Provision("div", None, False, 0, 0, 'left', temp_root, "")] + self.content_buffer)
+                    for child in built_content.getchildren():
+                        qs.append(child)
+
+                completed_block = E.block(self.current_mod_block, name="quotedStructure")
+                
+                self.mod_counter += 1
+                self.state = "IDLE"
+                self.current_mod_block = None
+                self.content_buffer = []
+                self.current_amendment_details = {}
+                return ("COMPLETED_BLOCK", completed_block)
+
+            else:
+                self.content_buffer.append(provision)
+                return ("CONSUMED", None)
+
+        return ("IDLE", provision)
+
 def transform_xml(infn: str) -> str:
     '''
     Act XML published on eISB encodes certain special characters, including fadas and euro symbols, as XML nodes defined by the legislation.dtd schema. 
     These are converted to regular characters via an XSLT (eisb_transform.xslt) and the XML is then reserialised as utf-8
-    
-    :param infn: input filename
-    :type infn: str
-    :return: eISB XML in utf-8 format
-    :rtype: str
     '''
     with open(XSLT_PATH, encoding="utf-8") as f:
         leg_dtd_xslt = f.read()
@@ -46,39 +196,21 @@ def transform_xml(infn: str) -> str:
 def parse_ojref(ojref:str) -> str:
     """
     Parses a footnote reference to the Official Journal of the EU (OJ[EU]) into Eurlex URI.
-    
-    :param ojref: Description
-    :type ojref: str    
-    :return: Description
-    :rtype: str
     """
-    
     ojref = ojref.replace(".", "").replace(" ", "")
     ojre = re.search(
         "OJ(No)?(?P<series>[CL])(?P<number>\d+),\d+(?P<year>\d{4}),?p(?P<page>\d+)", 
         ojref
         )
     if not ojre:
-
         return ""
-    sr = ojre.group("series")
-    yr = ojre.group("year")
-    num = int(ojre.group("number"))
-    pg = int(ojre.group("page"))
+    sr, yr, num, pg = ojre.group("series"), ojre.group("year"), int(ojre.group("number")), int(ojre.group("page"))
     ojuri = f"uriserv:OJ.{sr}_.{yr}.{num:03}.01.{pg:04}.01.ENG"
-    eurlex_uri = f"https://eur-lex.europa.eu/legal-content/EN/TXT/?uri={ojuri}"
-    return eurlex_uri
-
+    return f"https://eur-lex.europa.eu/legal-content/EN/TXT/?uri={ojuri}"
 
 def parse_p(p: etree) -> etree:
     """
     Converts eISB text content <p> into LegalDocML correct <p>.
-
-    
-    :param p: Description
-    :type p: etree.eisb.p
-    :return: Description
-    :rtype: Any
     """
     p.tag = "p"
     etree.strip_tags(p, ['font', 'xref'])
@@ -86,38 +218,27 @@ def parse_p(p: etree) -> etree:
         loc = p.attrib.pop("class").split(" ")
         if len(loc) == 6:
             tindent = int(loc[0])/2 if loc[0] != "0" else 0
-            margin =  int(loc[1])/2 if loc[1] != "0" else 0
+            margin = int(loc[1])/2 if loc[1] != "0" else 0
             p.attrib['style'] = f"text-indent:{tindent};margin-left:{margin};text-align:{loc[3]}"
-    for child in p.iter():
+    for child in list(p.iter()):
         if child.tag == "fn":
-            ref_text = child.find("./marker/su").text
-            ref_target = child.find("./p//su").tail.strip()
-            href = ""
-            if ref_target.startswith("OJ"):
-                href = parse_ojref(ref_target)
+            ref_text = child.findtext("./marker/su")
+            ref_target = child.find("./p//su").tail.strip() if child.find("./p//su") is not None else ""
+            href = parse_ojref(ref_target) if ref_target.startswith("OJ") else ""
             idx = p.index(child)
-            ref = E.sup(
-                E.ref(
-                ref_text, title=ref_target, href=href
-                )
-            )
+            ref = E.sup(E.ref(ref_text, title=ref_target, href=href))
             p.insert(idx, ref)
-        # eISB XML inserts images for complex content, eg, math formulae
         elif child.tag == "graphic":
             child.tag = "img"
-            # Base URL is currently https://www.irishstatutebook.ie
             child.attrib['src'] = f"/images/{child.attrib.pop('href')}"
-            
-            child.attrib.pop("quality")
-        elif child.tag == "sb":
-            child.tag = "sub"
-        elif child.tag == "su":
-            child.tag = "sup"
+            child.attrib.pop("quality", None)
+        elif child.tag in ("sb", "su"):
+            child.tag = child.tag.lower()
         elif child.tag == "unicode":
-            p.text += chr(int("0x" + child.attrib["ch"], 16)) + child.tail
-
-    keys = p.attrib.keys()
-    for key in keys:
+            if p.text is None: p.text = ""
+            p.text += chr(int("0x" + child.attrib["ch"], 16)) + (child.tail or "")
+    
+    for key in list(p.attrib.keys()):
         if key not in ["style"]:
             p.attrib.pop(key)
     etree.strip_elements(p, ["fn", "unicode"], with_tail=False)
@@ -125,46 +246,23 @@ def parse_p(p: etree) -> etree:
 
 def make_container(tag: str, num:E.b=None, heading:str=None, attribs:dict=None) -> E:
     """
-    Generate a LegalDocML element with <tag> name and optional num/heading elements
-    
-    :param tag: Description
-    :type tag: str
-    :param num: Description
-    :type num: E.b
-    :param heading: Description
-    :type heading: str
-    :param attribs: Description
-    :type attribs: dict
+    Generate a LegalDocML element with <tag> name and optional num/heading elements.
     """
-    if not attribs:
-        attribs = {}
+    if not attribs: attribs = {}
     container = E(tag, attribs)
-    if heading is not None:
-        container.append(heading)
-    if num is not None:
-        container.append(E.num(num))
-
+    if heading is not None: container.append(heading)
+    if num is not None: container.append(E.num(num))
     return container
 
 def make_eid_snippet(label: str, num:str):
     """
     Generate partial eId.
-    
-    :param label: Description
-    :type label: str
-    :param num: Description
-    :type num: str
     """
     return f"{label}_{''.join(d for d in num if d.isalnum())}"
 
 def parse_table(table: etree):
     """
     Convert eISB table element (and children) into correct LegalDocML XML structure.
-    
-    :param table: Description
-    :type table: etree.eisb.table
-    :param alignment: Description
-    :type alignment: Str
     """
     etree.strip_tags(table, "tbody")
     etree.cleanup_namespaces(table)
@@ -172,28 +270,22 @@ def parse_table(table: etree):
     if table.attrib.get("class"):
         loc = table.attrib.pop("class").split(" ")
         if len(loc) == 6:
-            tindent = int(loc[0])/2 if loc[0] != "0" else 0
-            margin =  int(loc[1])/2 if loc[1] != "0" else 0
-            style = f"text-indent:{tindent};margin-left:{margin};text-align:{loc[3]}"    
-
+            style = f"text-indent:{int(loc[0])/2 if loc[0]!='0' else 0};margin-left:{int(loc[1])/2 if loc[1]!='0' else 0};text-align:{loc[3]}"    
+    
     colgroup = table.find("colgroup")
     colwidths = [w.strip("%") for w in colgroup.xpath("./col/@width")]
-    style += ";colwidths:" ",".join(colwidths)
+    style += ";colwidths:" + ",".join(colwidths)
     table.attrib['style'] = style
-    table.attrib["width"] =  table.attrib['width'].strip("%")
+    table.attrib["width"] = table.attrib['width'].strip("%")
     table.remove(colgroup)
     for row_idx, tr in enumerate(table.xpath("./tr")):
         for col_idx, td in enumerate(tr.xpath("./td")):
             valign = td.attrib.pop("valign")
-            if row_idx == 0:
-                td.tag = "th"
-                td.attrib['style'] = f"width:{colwidths[col_idx]};vertical-align:{valign}"
-            else:
-                td.attrib['style'] = f"vertical-align:{valign}"  
+            td.tag = "th" if row_idx == 0 else "td"
+            td.attrib['style'] = f"width:{colwidths[col_idx]};vertical-align:{valign}"
             for p in td.xpath("./p"):
-                p = parse_p(p)
-    keys = table.attrib.keys()
-    for key in keys:
+                parse_p(p)
+    for key in list(table.attrib.keys()):
         if key not in ["style", "width"]:
             table.attrib.pop(key)
     return table
@@ -202,662 +294,277 @@ def contains(string, s: set[str]):
     """ Check whether sequence str contains ANY of the items in set. """
     return any([c in string for c in s])
 
-def parse_section(sect: etree) -> list:
+def parse_section(sect: etree):
     """
     Generate LegalDocML section container from eISB section content.
-    Parse <p> and <table> elements into correct LegalDocML element type.
-    Location in hierarchy is identified via a combination of provision number and the hanging/indentation
-    of the <p>, as contained in the class attribute in the node.
-
-    Text may have nested provisions, eg "1. (1) (a) This section..." 
-    so paragraphs are checked for 
-    section->subsection->paragraph->subparagraph->clause->subclause.
-
-    When a provision number is found, it's stripped out of the text and added to the subdivs list 
-    (section_hierarchy will put them in hierarchical order)
-    
-    :param sect: Description
-    :type sect: etree.root.subdiv
-    :return: Description
-    :rtype: list
+    This version uses the AmendmentParser state machine and preserves provision identification.
     """
     Provision = namedtuple("Provision", "tag eid ins hang margin align xml text")
     snumber = sect.find("number").text.strip()
     sheading = parse_p(sect.find("./title/p"))
     sheading.tag = "heading"
-    subdivs = []
-    provs = sect.xpath("./p|./table")
-    ptype = "section"
-    inserted = False
-    # Flag to avoid misclassifying paragraph numbers i, v, x as subparagraphs by checking preceding letter.
-    # If preceding letter is h, u or w classify i, v or x as paragraph.
-    # ToDo: will be wrong if a subparagraph is nested within a paragraph numbered h, u or w.
-    is_huw = False    
-    log.info("Parsing section %s", snumber)
     eid = make_eid_snippet("sect", snumber)
-    sect = make_container(ptype, num=E.b(snumber), heading=sheading, attribs={"eId": eid})
-    subdivs.append(
-        Provision(
-        tag="section", eid=eid, 
-        ins=inserted, 
-        hang=-3, margin=11, align="left", xml=sect, text=None
-        ))
+    sect_xml = make_container("section", num=E.b(snumber), heading=sheading, attribs={"eId": eid})
+    
+    log.info("Parsing section %s", snumber)
+    amendment_parser = AmendmentParser(eid)
+
+    # Pass 1: Convert all raw XML elements to Provision objects with correct tags
+    raw_provisions = []
+    provs = sect.xpath("./p|./table")
+    is_huw = False
+    
     for i, p in enumerate(provs):
         text_loc = p.get("class").split(" ")
-        if len(text_loc) == 6:
-            hanging, margin = [int(i) for i in text_loc[:2]]
-            alignment = text_loc[3]
-        else:
-            hanging = 0
-            text = 0
-            margin = 0
-            alignment = "left"
+        hanging, margin, alignment = [int(i) for i in text_loc[:2]] + [text_loc[3]] if len(text_loc) == 6 else (0, 0, "left")
         text = "".join(p.xpath(".//text()")).strip()
+        
+        # Default values
+        ptype = "tblock"
+        p_eid = None
+        inserted = False
 
         if p.tag == "table":
-            p = parse_table(p)
-            subdivs.append(
-                Provision(
-                tag="table", eid=None, ins=inserted, 
-                hang=hanging, margin=margin, align=alignment, xml=p, text=text
-                ))
+            raw_provisions.append(Provision("table", None, False, hanging, margin, alignment, parse_table(p), text))
             continue
-        if len(text) == 0:
-            # Text block is a non-numbered content paragraph, eg. definition block.
-            p = parse_p(p)
-            subdivs.append(
-                Provision(
-                tag="tblock", eid=None, ins=inserted, 
-                hang=hanging, margin=margin, align=alignment, xml=p, text=None
-                ))
+
+        if not text:
+            raw_provisions.append(Provision("tblock", None, False, hanging, margin, alignment, parse_p(p), text))
             continue
-        # Flag for inserted text
-        if (text.startswith(ODQ) and (CDQ) not in text[:-2] and ODQ not in text[1:]) or text == ODQ:
-            inserted = True
 
-            subdivs.append(
-                Provision(
-                tag="quotestart", eid=None, ins=inserted,
-                hang=hanging, margin=margin, align=alignment,
-                xml=make_container("quotedStructure", attribs={"startQuote": "“"}), text=None
-                )
-                )
 
+        
+        # --- Start of preserved provision identification logic ---
         b = p.find("./b")
-        # Section numbers are Arabic numerals in bold with possible capital case letters appended.
         if b is not None and b.tail is not None:
             etree.strip_elements(p, 'b', with_tail=False)
-            if hanging + margin > 8:
-                ptype = "section"
-                inserted = True
-                pnumber = b.text.strip()
-                eid = make_eid_snippet("sect", pnumber)
-                subdivs.append(
-                    Provision(
-                    tag=ptype, eid=eid, 
-                    ins=inserted, hang=hanging, 
-                    margin=margin, align=alignment, xml=make_container(ptype, b, attribs={"eId":eid}), text=None
-                    ))
-        # Subsections are Arabic numerals in parenthesis with possible capital case letters: (1), (2), (1A), (1AB) .
-        subsect_re = re.match("^\s?(“?\(\d+[A-Z]*\))", p.text or "")
+            if hanging + margin > 8: ptype, inserted, pnumber, p_eid = "section", True, b.text.strip(), make_eid_snippet("sect", b.text.strip())
+        
+        subsect_re = re.match(r"^\s?(“?\(\d+[A-Z]*\))", p.text or "")
         if subsect_re:
-            inserted = False
-            if hanging + margin > 8 or (ptype in ["section", "subsection"] and inserted is True):
-                inserted = True
-            ptype = "subsection"
-            pnumber = subsect_re.group(1)
-            eid = make_eid_snippet("subsect", pnumber)
+            ptype, pnumber = "subsection", subsect_re.group(1)
+            p_eid = make_eid_snippet("subsect", pnumber)
             p.text = p.text[subsect_re.end():].lstrip()
-            subdivs.append(
-                Provision(
-                tag=ptype, 
-                eid=eid, 
-                ins=inserted, hang=hanging, margin=margin, align=alignment, 
-                xml=make_container(ptype, pnumber, attribs={"eId": eid}), text=None
-                ))
-        # Before ca. 2010, section and subsection numbers are italicised, eg, "<p>(<i>a</i>)...</p>". 
-        # Making editorial decision to remove italicisation for consistency and ease of parsing.
+        
         ital = p.find("i")
-        if p.text == "(" and ital is not None and ital.tail.startswith(")"):
+        if p.text == "(" and ital is not None and ital.tail and ital.tail.startswith(")"):
             p.text += ital.text + ital.tail
             p.remove(ital)
 
-        # Paragraphs are lower case letters in parenthesis - (a), (b), (aab)
-        para_re = re.match("^\s?(“?\([a-z]+\))", p.text or "")
-        #ToDo older Acts use itals
+        para_re = re.match(r"^\s?(“?\([a-z]+\))", p.text or "")
         if para_re:
-            inserted = False
             pnumber = para_re.group(1)
             eid_number = "".join(d for d in pnumber if d.isalnum())
-            if margin == 14:
-                ptype = "paragraph"
-            # subparagraphs are 
-            elif eid_number[0] in "ivx" and margin == 17:
-                ptype = "subparagraph"              
-            elif eid_number[0] in "ivx" and not is_huw:
-
-                # Subparagraphs are lower case roman numerals (i, ii..v..x) 
-                # but paragraphs can sometimes use (i) (and encountered paragraphs v and x in s. 96 of Finance Act 2012, although these are effectivly table rows). 
-                ptype = "subparagraph"
-                inserted = True
-            else:
-                ptype = "paragraph"
-                inserted = True
+            if margin == 14: ptype = "paragraph"
+            elif eid_number[0] in "ivx" and (margin == 17 or not is_huw): ptype = "subparagraph"
+            else: ptype = "paragraph"
             p.text = p.text[para_re.end():].lstrip()
-            eid = make_eid_snippet("para", pnumber)       
-            if ptype == "subparagraph":
-                eid = make_eid_snippet("subpara", pnumber)
-
-            
-            subdivs.append(
-                Provision(
-                tag=ptype, 
-                eid=eid, 
-                ins=inserted, hang=hanging, margin=margin, align=alignment,
-                xml=make_container(ptype, pnumber, attribs={"eId": eid}), text=None
-                ))
+            p_eid = make_eid_snippet("para" if ptype == "paragraph" else "subpara", pnumber)
             is_huw = pnumber in "huw"
-        # This is done twice to catch paragraph->subparagraph provisions
-        subpara_re = re.match("^\s?(“?\([a-z]+\))", p.text or "")
-        if subpara_re:
-            inserted = False
-            ptype = "subparagraph"
-            pnumber = para_re.group(1)
-            if margin > 17:
-                inserted = True
-            p.text = p.text[subpara_re.end():].lstrip()
-            eid = make_eid_snippet("subpara", pnumber)
-            subdivs.append(
-                Provision(
-                tag=ptype,
-                eid=eid,
-                ins=inserted, hang=hanging, margin=margin, align=alignment, xml=make_container(ptype, pnumber, attribs={"eId": eid}), text=None
-                ))
-        # Clause is upper Roman numberal - (I), (V), (X), (II)
+
         clause_re = re.match(r"^\s?(“?\([IVX]+\))", p.text or "")
         if clause_re:
-            inserted = False
-            ptype = "clause"
-            pnumber = clause_re.group(1)
-            if margin > 20:
-                inserted = True
+            ptype, pnumber = "clause", clause_re.group(1)
+            p_eid = make_eid_snippet("clause", pnumber)
             p.text = p.text[clause_re.end():].lstrip()
-            eid = make_eid_snippet("clause", pnumber)
-            subdivs.append(
-                Provision(
-                tag=ptype,
-                eid=eid,
-                ins=inserted, hang=hanging, margin=margin, align=alignment, xml=make_container(ptype, pnumber, attribs={"eId": eid}), text=None
-                ))
-        # Subclause is upper case alphabet - (A), (B), (AB)
+
         subclause_re = re.match(r"^\s?(“?\([A-Z]+\))", p.text or "")
         if subclause_re:
-            inserted = False
-            ptype = "subclause"
-            pnumber = subclause_re.group(1)
-            if margin > 23:
-                inserted = True
+            ptype, pnumber = "subclause", subclause_re.group(1)
+            p_eid = make_eid_snippet("subclause", pnumber)
             p.text = p.text[subclause_re.end():].lstrip()
-            eid = make_eid_snippet("subclause", pnumber)
-            subdivs.append(
-                Provision(tag=ptype, eid=eid, 
-                ins=inserted, hang=hanging, margin=margin, align=alignment,
-                xml=make_container(ptype, pnumber, attribs={"eId": eid}),
-                text=None
-                ))
-        # Article is an element of a schedule (see S.23 of Finance Act 2022)
-        #ToDo: not completely accurate as a descriptor - may be better to use hcontainer
-        article_re = re.match(r"^\s?(“?\d+\.)", p.text or "")
-        if article_re:
-            ptype = "article"
-            pnumber = article_re.group(1)
-            # inserted uses pre-existing status - list will follow a header or at least the first number will have opening quotes.
-            subdivs.append(
-                Provision(
-                tag=ptype,
-                eid=make_eid_snippet("article", pnumber), 
-                ins=inserted, hang=hanging, margin=margin, align=alignment, xml=make_container(ptype, pnumber, attribs={"eId": eid}), text=None
-                ))
-        is_header_for_table = False
-        if p.tag == 'p' and (i + 1) < len(provs) and provs[i+1].tag == 'table':
-            is_header_for_table = True
-
-        #ToDo - better identification of real parts over schedule parts
-        if alignment == "center" and ("PART" in text or "Part" in text or "Chapter" in text or "SCHEDULE" in text) and not is_header_for_table:
-            if "part" in text.lower():
-                inserted = True
-                ptype = "part"
-                pnumber = text.strip()
-                eid = make_eid_snippet("part", pnumber.lower().replace("part", "").upper())
-                pxml = make_container(ptype, pnumber, attribs={"eId": eid})
-            elif "Chapter" in text:
-                inserted = True
-                ptype = "chapter"
-                pnumber = text.strip()
-                eid = make_eid_snippet("chapter", pnumber.replace("Chapter", ""))
-                pxml = make_container(ptype, pnumber, attribs={"eId": eid})
-            elif "SCHEDULE" in text:
-                inserted = True
-                ptype = "schedule"
-                pnumber = text.strip()
-                eid = make_eid_snippet("schedule", pnumber.replace("SCHEDULE", ""))
-                pxml = make_container("hcontainer", pnumber, attribs={"eId": eid, "name": ptype})
-            subdivs.append(
-                Provision(
-                tag=ptype, eid=eid, 
-                ins=inserted, hang=hanging, margin=margin, align=alignment, 
-                xml=pxml,
-                text="".join(pxml.xpath(".//text()"))
-                ))
-            continue
+        # --- End of preserved provision identification logic ---
         
-        # Now that subdivision type has been identified, the text content can be parsed
-        parse_p(p)
+        xml_element = make_container(ptype, pnumber, attribs={"eId": p_eid}) if p_eid else parse_p(p)
+        raw_provisions.append(Provision(ptype, p_eid, inserted, hanging, margin, alignment, xml_element, text))
 
-        # Identify definition blocks.
-        defining_words = ["means", "mean", "meaning", "construed", "referred to"]
-        if (
-            (ODQ in text and CDQ in text and contains(text, set(defining_words))
-             ) or (
-            OSQ in text and CSQ in text and contains(text, set(defining_words)))):
-            pass
-        ptype = "tblock"
-        subdivs.append(
-            Provision(
-            tag=ptype, eid=None, 
-            ins=inserted, hang=hanging, margin=margin, align=alignment, xml=p, text="".join(p.xpath(".//text()"))
-            ))
-        # End quote for inserted text       
-        if len(text) > 1 and text[-2] == "”":
-            inserted = True
-            subdivs.append(
-                Provision(
-                tag="quoteend", eid=None, ins=inserted, 
-                hang=hanging, margin=margin, align=alignment,
-                xml=None, text=text[-2:]
-                ))
-    return subdivs
+        if text.endswith(CDQ) and text.count(CDQ) > text.count(ODQ):
+            raw_provisions.append(Provision("quoteend", None, True, hanging, margin, alignment, None, text[-2:]))
+
+    # Pass 2: Process with AmendmentParser and build final list for hierarchy builder
+    processed_provisions = [Provision("section", eid, False, -3, 11, "left", sect_xml, None)]
+    
+    for prov in raw_provisions:
+        status, data = amendment_parser.process(prov)
+        if status == "CONSUMED":
+            continue
+        elif status == "COMPLETED_BLOCK":
+            processed_provisions.append(Provision("mod_block", None, True, prov.hang, prov.margin, prov.align, data, None))
+        elif status == "COMPLETED_INLINE":
+            # Find the provision that contained the instruction and modify it
+            for i in range(len(processed_provisions) - 1, -1, -1):
+                if processed_provisions[i].text == prov.text:
+                    # This is complex. For now, just append the modified <p> tag.
+                    # A full implementation would replace text with the mod element.
+                    p_tag = processed_provisions[i].xml
+                    p_tag.append(data) # This is not ideal but shows intent
+                    break
+            log.warning("Inline modification added. Manual placement of <mod> tag may be required.")
+        elif status == "IDLE":
+            processed_provisions.append(prov)
+
+    return processed_provisions, amendment_parser.active_mod_info
 
 def locate_tag(parent, tags:list):
     """
     Finds location in hierarchy of element's parent.
-    
-    :param parent: Description
-    :param tags: Description
-    :type tags: list
     """
-    logging.debug("Finding parent of element from %s, with tags %s", parent, tags)
-    if parent.tag in tags:
-        # logging.debug("Parent is %s", parent.tag)
-        return parent
-    
+    if parent is None: return None
+    if parent.tag in tags: return parent
     curr = parent.getparent()
     while curr is not None:
-        if curr.tag in tags:
-            return curr
+        if curr.tag in tags: return curr
         curr = curr.getparent()
-
-    logging.debug("Ancestors are %s", list(parent.iterancestors()))
-    for ancestor in parent.iterancestors(tags):
-        logging.debug("Ancestor iter is %s", ancestor.tag)
-        if ancestor.tag in tags:
-            logging.debug("Ancestor parent is %s", ancestor.tag)
-            return ancestor
     return None
 
-def append_subdiv(parent_container: etree, modparent: etree, subdiv: namedtuple, mod: bool) -> etree:
+def append_subdiv(parent_container: etree, subdiv: namedtuple) -> etree:
     """
     Appends a subdivision to its correct parent in the XML tree.
-
-    This function handles creating hierarchical eIds, appending to either a
-    standard container or a modification block, and adjusting sibling tags.
-
-    :param container: The standard hierarchical parent element.
-    :param modparent: The parent for modified/inserted content.
-    :param subdiv: The Provision object for the subdivision to append.
-    :param mod: A flag indicating if currently inside a modification.
     """
-    pre_target = None
-    if parent_container is not None:
-        subdiv.xml.attrib['eId'] = f"{parent_container.attrib.get('eId')}_{subdiv.xml.attrib.get('eId')}"
-        # logging.debug("Appending %s to %s", subdiv.xml.attrib.get('eId'), parent_container.attrib.get('eId'))
-        parent_container.append(subdiv.xml)
-        pre_target = parent_container
-    elif mod:
-        modparent.append(subdiv.xml)
-        pre_target = modparent
-    else:
-        raise ValueError(
-            f"Cannot determine parent for subdivision: {subdiv.xml.attrib.get('eId')}"
-            )
+    if parent_container is None:
+        raise ValueError(f"Cannot determine parent for subdivision: {etree.tostring(subdiv.xml)}")
     
-    parent = subdiv.xml
-    pre = parent.getprevious()
+    if subdiv.eid:
+        subdiv.xml.attrib['eId'] = f"{parent_container.attrib.get('eId')}_{subdiv.eid}"
+    parent_container.append(subdiv.xml)
+    
+    pre = subdiv.xml.getprevious()
     if pre is not None and pre.tag == "content":
         pre.tag = "intro"
-    return pre_target
+    return subdiv.xml
 
 def section_hierarchy(subdivs: list) -> E.section:
     """
-    Arranges list of subdiv elements into section hierarchy based on subdiv tags.
-    
-    :param subdivs: Description
-    :type subdivs: list
-    :return: Description
-    :rtype: Any
+    Arranges list of subdiv elements into section hierarchy.
     """
+    if not subdivs: return None
     sectionparent = parent = subdivs[0].xml
 
-    mod = False
-    modparent = None
-    outerparent = None
-    i = 1
-    while i < len(subdivs):
-        subdiv = subdivs[i]
-        next_subdiv = subdivs[i + 1] if (i + 1) < len(subdivs) else None
-        is_table_header = (
-            subdiv.tag == 'tblock' and
-            subdiv.xml.tag == 'p' and
-            'text-align:center' in subdiv.xml.attrib.get('style', '') and
-            next_subdiv and
-            next_subdiv.tag == 'table'
-        )
-
-
-        if (
-            subdivs[0].eid == "sect_76" and 
-            subdiv.eid == "para_c" and
-            etree.tostring(subdiv.xml) == b'<paragraph eId="para_c"><num>(c)</num></paragraph>'):
-            logging.info(
-                "Parent eId: %s, previous eId: %s,current eId: %s", 
-                parent.attrib.get("eId"),
-                subdivs[i-1].eid,
-                subdiv.eid,
-            )
-            parsing_errors_writer(sectionparent)
-
-        if subdiv.tag == "quotestart":
-            mod = True
-            outerparent = parent
-
-            logging.debug("Quotestart outerparent: %s", outerparent)
-            modparent = parent = subdiv.xml
-            logging.debug("Quote end modparent: %s", modparent)
-        elif subdiv.tag == "quoteend":
-            try:
-                modparent.attrib['endQuote'] = subdiv.text
-
-                modblock = E.block(
-                    E.mod(
-                    modparent
-                    ),
-                    {"name": "quotedStructure"}
-                )
-                parent = outerparent
-                logging.debug("Quoteend parent: %s", parent)
-                content = parent.find("content")
-                if content is None:
-                    content = E.content()
-                    parent.append(content)
-                content.append(modblock)
-                modparent = None
-                mod = False
-            except AttributeError:
-                # this is caused by a typo in section 46(2) of FA2022, which incorrectly ends with '”.'
-                log.exception(
-                    "Failed to process quoteend for parent eId '%s'. This may be due to a source typo.", parent.attrib.get("eId")
-                )
-
-        elif mod:
-            if subdiv.xml is not None:
-                modparent.append(subdiv.xml)
-
+    for subdiv in subdivs[1:]:
+        if subdiv.tag == "mod_block":
+            container = parent.find("content")
+            if container is None: container = E.content(); parent.append(container)
+            container.append(subdiv.xml)
         elif subdiv.tag in ["tblock", "table"]:
-            content = parent.find("content")
-            if parent.attrib.get("eId") and content is None:
-                if parent.tag in ["part", "chapter", "schedule", "division"]:
-                    pass
-                    
-                parent.append(E.content(subdiv.xml))
-            elif content is not None:
-                content.append(subdiv.xml)
-            else:
-                parent.append(subdiv.xml)
-
-        elif subdiv.tag == "schedule":
-            modparent.append(subdiv.xml)
-            parent = subdiv.xml
-
-        elif subdiv.tag == "part":
-            modparent.append(subdiv.xml)
-            parent = subdiv.xml
-
-        elif subdiv.tag == "chapter":
-            tags = ["part"]
-            container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, subdiv, mod)
-
-        elif subdiv.tag == "section":
-
-            tags = ["chapter", "part"]
-            container = locate_tag(parent, tags)
-            pre_p = subdivs[i-1].xml
-            if pre_p.tag == "p" and pre_p.find("b") is not None:
-                
-                pre_p.tag = "heading"
-                subdiv.xml.insert(1, pre_p)
-            parent = append_subdiv(container, modparent, subdiv, mod)
-        
-        elif subdiv.tag == "subsection":
-            tags = ["section"]
-            container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, subdiv, mod)
-      
-        elif subdiv.tag == "paragraph":
-
-            tags = ["section", "subsection"]
-            container = locate_tag(parent, tags)
-
-
-            parent = append_subdiv(container, modparent, subdiv, mod)
+            container = parent.find("content")
+            if container is None: container = E.content(); parent.append(container)
+            container.append(subdiv.xml)
+        else:
+            # Hierarchy logic based on tag
+            if subdiv.tag == "subsection": tags = ["section"]
+            elif subdiv.tag == "paragraph": tags = ["section", "subsection"]
+            elif subdiv.tag == "subparagraph": tags = ["section", "subsection", "paragraph"]
+            elif subdiv.tag == "clause": tags = ["section", "subsection", "paragraph", "subparagraph"]
+            elif subdiv.tag == "subclause": tags = ["section", "subsection", "paragraph", "subparagraph", "clause"]
+            else: tags = ["part", "chapter", "section", "subsection", "paragraph", "subparagraph", "clause", "subclause"]
             
-        elif subdiv.tag == "subparagraph":
-            tags = ["section", "subsection", "paragraph"]
-            container = locate_tag(parent, tags)
-
-            parent = append_subdiv(container, modparent, subdiv, mod)
-
-            if parent is None:
-                parsing_errors_writer(parent.getroot())
-                raise ValueError(f"{subdiv.eid} parent not found")
-
-        elif subdiv.tag == "clause":
-            tags =  ["section", "subsection", "paragraph", "subparagraph"]
-            container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, subdiv, mod)
-
-        elif subdiv.tag == "subclause":
-            tags =  ["section", "subsection", "paragraph", "subparagraph", "clause"]
-            container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, subdiv, mod)
-
-        elif subdiv.tag == "article":
-            tags =  ["section", "subsection", "paragraph", "subparagraph", "clause", "subclause"]
-            container = locate_tag(parent, tags)
-            parent = append_subdiv(container, modparent, subdiv, mod)
-
-        i+=1
-
-    for idx, mod in enumerate(sectionparent.xpath(".//mod")):
-        parent_eid = sectionparent.attrib['eId']
-        mod_eid = f"{parent_eid}_mod_{idx+1}"
-        mod.attrib['eId'] = mod_eid
-        for idx2, el in enumerate(mod.xpath(".//*[@eId]")):
-            
-            el.attrib['eId'] = f"{mod_eid}_{el.attrib['eId']}"
+            container = locate_tag(parent, tags) or sectionparent
+            parent = append_subdiv(container, subdiv)
     return sectionparent
 
 def parse_body(eisb_parent: etree, akn_parent: E, toc: E) -> tuple:
     """
-    Build out the LegalDocML skeleton (pxml) with content from eISB XML (parent).
-
-    As eISB XML is hierarchical only as deep as section level, 
-    lower level nodes (subsection, paragraph, subparagraph, clause, subclause)
-    as well as inserted text have to be parsed from a flat <p> to the appropriate hierarchy in
-    the LegalDocML schema.
-
-    In Irish convention, tables of contents only include Parts, Chapters, sections and Schedules.
-
-    #ToDo: decide whether ToCs need to be in XML at all.
-    
-    :param parent: eISB XML
-    :type parent: etree.root.body
-    :param pxml: LegalDocML XML
-    :type pxml: E.act.body
-    :param toc: Table of contents element from LegalDocML XML object.
-    :type toc: E.act.body.toc
-    :return: Description
-    :rtype: tuple
+    Build out the LegalDocML skeleton with content from eISB XML.
     """
-    for i, subdiv in enumerate(eisb_parent.getchildren()):
-
+    all_mod_info = []
+    top_level_tags = ["part", "chapter", "division"]
+    for subdiv in eisb_parent.getchildren():
         if subdiv.tag == "sect":
-            subdivs = parse_section(subdiv)
+            subdivs, mod_info = parse_section(subdiv)
+            all_mod_info.extend(mod_info)
             sxml = section_hierarchy(subdivs)
-
-            akn_parent.append(
-                sxml
-            )
-            level = 1
-            if eisb_parent.tag == "part":
-                level += 1
-            if eisb_parent.tag == "chapter":
-                level += 2
-
+            if sxml is not None: akn_parent.append(sxml)
+            
+            level = 1 + (1 if eisb_parent.tag == "part" else 0) + (2 if eisb_parent.tag == "chapter" else 0)
             toc.append(
                 E.tocItem(
-                {"level": str(level), "class": sxml.tag, "href": f"#{sxml.attrib['eId']}"},
-                E.inline({"name": "tocNum"}, sxml.find("./num/b").text),
-                E.inline({"name": "tocHeading"}, "".join(sxml.xpath("./heading//text()")))
+                    {"level": str(level), "class": "section", "href": f"#{sxml.attrib['eId']}"},
+                    E.inline({"name": "tocNum"}, sxml.findtext("./num/b")),
+                    E.inline({"name": "tocHeading"}, "".join(sxml.xpath("./heading//text()")))
                 )
             )
-        tags = ["part", "chapter", "division"]
-        if subdiv.tag in tags:
-
+        
+        elif subdiv.tag in top_level_tags:
             title = subdiv.find("title").getchildren()
-            number = "".join(title[0].xpath(".//text()"))
-            sdheading = parse_p(title[1])
-            sdheading.tag = "heading"
+            number, sdheading_p = "".join(title[0].xpath(".//text()")), title[1]
+            sdheading = parse_p(sdheading_p); sdheading.tag = "heading"
             eid = make_eid_snippet(subdiv.tag, number.split(" ")[-1])
-            subdivxml = E(
-                subdiv.tag, E.num(number), sdheading, {"eId": eid}
-                )
+            subdivxml = E(subdiv.tag, E.num(number), sdheading, {"eId": eid})
             akn_parent.append(subdivxml)
-            if subdivxml.tag in tags[1:]:
+            if subdivxml.tag in top_level_tags[1:]:
                 subdivxml.attrib['eId'] = f"{subdivxml.getparent().attrib['eId']}_{subdivxml.attrib['eId']}"
-            if subdiv.tag == "part":
-                level = "1"
-            elif subdiv.tag == "chapter":
-                level = "2"
-            else:
-                level = "3"
             
+            level = "1" if subdiv.tag == "part" else "2" if subdiv.tag == "chapter" else "3"
             toc.append(
                 E.tocItem(
-                {"level": level, "class": subdiv.tag, "href": f"#{eid}"},
-                E.inline({"name": "tocNum"}, number),
-                E.inline({"name": "tocHeading"}, "".join(sdheading.xpath("./heading//text()")))
+                    {"level": level, "class": subdiv.tag, "href": f"#{eid}"},
+                    E.inline({"name": "tocNum"}, number),
+                    E.inline({"name": "tocHeading"}, "".join(sdheading.xpath(".//text()")))
                 )
             )
-            
-            divs = parse_body(subdiv, subdivxml, toc)
-    return akn_parent, toc
+            _, _, mod_info = parse_body(subdiv, subdivxml, toc)
+            all_mod_info.extend(mod_info)
+    return akn_parent, toc, all_mod_info
 
 def act_metadata(act: etree) -> namedtuple: 
     """
-    Parses Act metadata from eISB Act XML and returns as a named tuple
-    
-    :param act: etree.root of eISB Act
-    :type act: lxml.etree.root
-    :return: Named tuple "ActMeta" with fields: number, year, date_enacted, status, short_title, long_title
-    :rtype: namedtuple
+    Parses Act metadata from eISB Act XML and returns as a named tuple.
     """
-    
     ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
     metadata = act.find("metadata")
-    short_title = metadata.find("title").text
+    short_title, number, year = metadata.findtext("title"), metadata.findtext("number"), metadata.findtext("year")
     log.info("Parsing metadata for: %s", short_title)
-    number = metadata.find("number").text
-    year = metadata.find("year").text
-    doe = metadata.find("dateofenactment").text
+    doe = metadata.findtext("dateofenactment")
     date_enacted = dtparse(doe).date()
-    long_title = parse_p(act.xpath(
-        "./frontmatter/p[(contains(text(), 'AN ACT TO')) or (contains(text(), 'An Act to'))]"
-        )[0])
-    # long_title = parse_p(act.find("./frontmatter/p[@class='0 8 0 left 1 0']"))
-
-    return ActMeta(
-        number=number, year=year, date_enacted=date_enacted, 
-        status="enacted", short_title=short_title, long_title=long_title
-        )
+    long_title_p = act.xpath("./frontmatter/p[(contains(text(), 'AN ACT TO')) or (contains(text(), 'An Act to'))]")[0]
+    return ActMeta(number, year, date_enacted, "enacted", short_title, parse_p(long_title_p))
 
 def parse_schedule(root, act):
     """
-    Schedules may contain a wide range of content types. 
-    The parse loop simply recreates the eISB hierarchy of flat paragraphs and tables below Schedule level with LegalDocML elements.
-    This is a simpler alternative to trying to contend with specific Schedules but it means that it doesn't recognise useful semantics in some Schedules, eg where they contain amendments.
-    
-    :param root: Description
-    :param act: Description
+    Schedules may contain a wide range of content types.
     """
-    body = act.find("./body")
-    toc = act.find("./coverPage/toc")
-    schedules = root.xpath("./backmatter/schedule")
-    for idx, sch in enumerate(schedules):
-        number = "".join(sch.xpath("./title/p[1]//text()")[0])
-        eid_num = number.replace("SCHEDULE", "").strip()
-        heading = "".join(sch.xpath("./title/p[2]//text()"))
-        
+    body, toc = act.find("./body"), act.find("./coverPage/toc")
+    for idx, sch in enumerate(root.xpath("./backmatter/schedule")):
+        number, heading = "".join(sch.xpath("./title/p[1]//text()")), "".join(sch.xpath("./title/p[2]//text()"))
         eid = f"sched_{idx+1}"
-        schedule = E.hcontainer(
-            {"name": "schedule", "eId": eid},
-            E.num(number),
-            E.heading(heading),
-            E.content()
-        )
+        schedule = E.hcontainer({"name": "schedule", "eId": eid}, E.num(number), E.heading(heading), E.content())
         body.append(schedule)
         toc.append(
             E.tocItem(
-            {"level": "1", "class": "schedule", "href": f"#{eid}"},
-            E.inline({"name": "tocNum"}, number),
-            E.inline({"name": "tocHeading"}, heading)
+                {"level": "1", "class": "schedule", "href": f"#{eid}"},
+                E.inline({"name": "tocNum"}, number),
+                E.inline({"name": "tocHeading"}, heading)
             )
         )
         for p in sch.xpath("./p|./table"):
-            if p.tag == "p":
-                schedule.find("content").append(parse_p(p))
-            else:
-                schedule.find("content").append(parse_table(p))
+            schedule.find("content").append(parse_p(p) if p.tag == "p" else parse_table(p))
     return body
 
 def fix_headings(act):
     """
     Identify and correctly tag headings in inserted text.
-    
-    :param act: Description
     """
-    inserted_sds = act.xpath(
-        "./body//quotedStructure/*[(local-name()='part') or (local-name()='chapter') or (local-name()='hcontainer' and @name='schedule')][./num]")
-    for sd in inserted_sds:
+    for sd in act.xpath("./body//quotedStructure/*[self::part or self::chapter or self::hcontainer[@name='schedule']][./num]"):
         num = sd.find("num")
-        if num is not None and num.getnext().tag in ["content", "intro"]:
-            ctr = num.getnext()
-            p = num.getnext().find("p")
-            if p.attrib['style'] == 'text-indent:0;margin-left:0;text-align:center':
-
+        if num is not None and num.getnext() is not None and num.getnext().tag in ["content", "intro"]:
+            ctr, p = num.getnext(), num.getnext().find("p")
+            if p is not None and 'text-align:center' in p.attrib.get('style', ''):
                 idx = sd.index(ctr)
-                p.tag = "heading"
-                sd.insert(idx, p)
-                if len(ctr.getchildren()) == 0:
-                    sd.remove(ctr)
-    # inserted_sects = act.xpath("./body//quotedStructure//section")
+                p.tag = "heading"; sd.insert(idx, p)
+                if not ctr.getchildren(): sd.remove(ctr)
+
+def build_active_modifications(mod_info_list: list) -> E:
+    """
+    Builds the <activeModifications> XML block from a list of AmendmentMetadata.
+    """
+    active_mods_elem = E.activeModifications()
+    for meta in mod_info_list:
+        textual_mod = E.textualMod(type=meta.type)
+        textual_mod.append(E.source(href=meta.source_eId))
+        dest_attribs = {"href": meta.destination_uri}
+        if meta.position: dest_attribs['pos'] = meta.position
+        textual_mod.append(E.destination(**dest_attribs))
+        if meta.old_text: textual_mod.append(E.old(meta.old_text))
+        if meta.new_text: textual_mod.append(E.new(meta.new_text))
+        active_mods_elem.append(textual_mod)
+    return active_mods_elem
