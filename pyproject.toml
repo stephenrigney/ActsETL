@@ -8,6 +8,11 @@ dependencies = [
     "PyYAML",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest"
+]
+
 [project.scripts]
 actsetl = "actsetl.cli:main"
 

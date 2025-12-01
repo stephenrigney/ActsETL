@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+  <docNumber>123</docNumber>
+  <docTitle>An Act to test things
+  <body>
+    <section id="sec.1">
+      <heading>Section 1</heading>
+      <content>
+        <p>This is the first section.</p>
+      </content>
+    </section>
+  </body>
+</document>

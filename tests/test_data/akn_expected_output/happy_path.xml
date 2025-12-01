@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<akomaNtoso xmlns="http://docs.oasis-open.org/legaldocml/ns/akn/3.0">
+  <act contains="originalVersion">
+    <meta>
+      <identification source="#acts-etl">
+        <FRBRWork>
+          <FRBRthis value="/za/act/1980/123"/>
+          <FRBRuri value="/za/act/1980/123"/>
+          <FRBRdate date="1980-01-01" name="enactment"/>
+          <FRBRauthor href="#parliament" as="#author"/>
+        </FRBRWork>
+        <FRBRExpression>
+          <FRBRthis value="/za/act/1980/123/eng@2025-12-01"/>
+          <FRBRuri value="/za/act/1980/123/eng@2025-12-01"/>
+          <FRBRdate date="2025-12-01" name="publication"/>
+          <FRBRauthor href="#some-org" as="#publisher"/>
+        </FRBRExpression>
+        <FRBRManifestation>
+          <FRBRthis value="/za/act/1980/123/eng@2025-12-01.xml"/>
+          <FRBRuri value="/za/act/1980/123/eng@2025-12-01.xml"/>
+          <FRBRdate date="2025-12-01" name="publication"/>
+          <FRBRauthor href="#some-org" as="#publisher"/>
+        </FRBRManifestation>
+      </identification>
+    </meta>
+    <preface>
+      <p>
+        <docTitle>An Act to test things</docTitle>
+      </p>
+      <p>
+        <docNumber>123</docNumber>
+      </p>
+    </preface>
+    <body>
+      <section id="sec.1">
+        <num>1.</num>
+        <heading>Section 1</heading>
+        <paragraph id="sec.1.p1">
+          <content>
+            <p>This is the first section.</p>
+          </content>
+        </paragraph>
+      </section>
+    </body>
+  </act>
+</akomaNtoso>
