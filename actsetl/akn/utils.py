@@ -156,11 +156,10 @@ def akn_write(akn:etree, fn:str, validate:bool=True):
             logging.error("Invalid XML")
             for error in exc.error_log:
                 
-                logging.error(
-                    f"  [Line {error.line}, Column {error.column}] Path: {error.path}, Message: {error.message}"
-                    )
-                logging.error(etree.tostring(akn.xpath(error.path)[0]))
+                logging.error("Message: %s", error.message)
+                logging.error(etree.tostring(akn.xpath(error.path)[0], pretty_print=True))
                 logging.error("*********")
+            fn = fn.replace("akn.xml", "invalid_akn.xml")
     logging.info("Writing XML")
 
     write_xml(xml, fn)
