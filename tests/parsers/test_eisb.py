@@ -65,7 +65,7 @@ def parse_eisb_to_akn(xml_content: str) -> etree._Element:
     akn_body = akn_act.find("body")
     
     # The parse_body function returns multiple values, we capture them all
-    final_body, final_toc, mod_info = parse_body(eisb_body, akn_body, toc)
+    final_body, mod_info = parse_body(eisb_body, akn_body)
 
     return akn_act
 
