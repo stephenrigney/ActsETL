@@ -379,9 +379,20 @@ def parse_section(sect: etree):
             p_eid = make_eid_snippet("subclause", pnumber)
             p.text = p.text[subclause_re.end():].lstrip()
         # --- End of preserved provision identification logic ---
+
+        parse_p(p)
+
+        xml_element = make_container(ptype, pnumber, attribs={"eId": p_eid})
         
-        xml_element = make_container(ptype, pnumber, attribs={"eId": p_eid}) if p_eid else parse_p(p)
-        raw_provisions.append(Provision(ptype, p_eid, inserted, hanging, margin, alignment, xml_element, text))
+        raw_provisions.append(
+            Provision(
+                ptype, p_eid, inserted, hanging, margin, alignment, 
+                xml_element, "".join(p.xpath(".//text()"))
+            )
+            )
+
+        raw_provisions.append(Provision("tblock", None, inserted, hanging, margin, alignment, p, text))
+        
 
         if text.endswith(CDQ) and text.count(CDQ) > text.count(ODQ):
             raw_provisions.append(Provision("quoteend", None, True, hanging, margin, alignment, None, text[-2:]))
@@ -442,7 +453,8 @@ def section_hierarchy(subdivs: list) -> E.section:
     """
     Arranges list of subdiv elements into section hierarchy.
     """
-    if not subdivs: return None
+    if len(subdivs) == 0: 
+        return None
     sectionparent = parent = subdivs[0].xml
 
     for subdiv in subdivs[1:]:
@@ -513,8 +525,10 @@ def generate_toc(act: etree) -> E:
     """
     Generate the TOC for the Act.
     """
-    toc = E.toc()
-    eisb_parent = act.find("body")
+    toc = act.find("./coverPage/toc")
+    body = act.find("./body")
+    index_level = 1
+    levels = []
     sxml = eisb_parent.find("sect")
     level = 1 + (1 if eisb_parent.tag == "part" else 0) + (2 if eisb_parent.tag == "chapter" else 0)
     toc.append(
