@@ -56,7 +56,7 @@ def akn_skeleton(act_meta: etree) -> E:
             source="#source"
         ),
         E.analysis(
-            E.activeModifications(),
+        #    E.activeModifications(),
             source="#source"
         ),
         E.references(
@@ -107,8 +107,7 @@ def akn_skeleton(act_meta: etree) -> E:
         deepcopy(harp),
         deepcopy(number),
         deepcopy(short_title),
-        E.p("CONTENTS"),
-        E.toc
+        E.p("CONTENTS")
     )
 
     preface = E.preface(
