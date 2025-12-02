@@ -14,7 +14,7 @@ from dateutil.parser import parse as dtparse
 # sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from actsetl.parsers.eisb import (
-    act_metadata, parse_body, parse_p, ActMeta, RegexPatternLibrary, transform_xml
+    act_metadata, parse_body, parse_p, ActMeta, RegexPatternLibrary, transform_xml, parse_ojref
 )
 from actsetl.akn.skeleton import akn_skeleton
 
@@ -141,25 +141,27 @@ def test_amendment_parser():
 def test_transform_xml():
     """Test that the transform_xml function works as expected."""
     # Sample input XML
-    input_xml = E.root(
-        E.meta(
-            E.title("Sample Act"),
-            E.date("2023-01-01"),
-            E.identifier("ACT123")
-        ),
-        E.body(
-            E.p("<odq/> <euro/> <afada/> is a sample provision.")
-        )
-    )
+    input_xml = '''
+    <root>
+        <meta>
+            <title>Sample <Afada/>ct</title>
+            <date>2023-01-01</date>
+            <identifier>ACT123</identifier>
+        </meta>
+        <body>
+            <p><odq/> <euro/> <afada/> <Efada/> is a sample provision.</p>
+        </body>
+    </root>
+    '''
     
     # Transform the XML
-    transformed_xml = transform_xml(etree.tostring(input_xml, encoding="utf-8").decode("utf-8"))
-    
+    transformed_xml = etree.fromstring(transform_xml(input_xml))
+
     # Check that the transformed XML has the expected structure
-    assert transformed_xml.find(".//meta/title").text == "Sample Act"
+    assert transformed_xml.find(".//meta/title").text == "Sample Áct"
     assert transformed_xml.find(".//meta/date").text == "2023-01-01"
     assert transformed_xml.find(".//meta/identifier").text == "ACT123"
-    assert transformed_xml.find(".//body/p").text == "This is a sample provision."
+    assert transformed_xml.find(".//body/p").text == "“ € á É is a sample provision."
     
     print("✅ transform_xml test passed!")
 
@@ -168,31 +170,35 @@ def test_parse_ojref():
     patterns = RegexPatternLibrary()
     
     test_ojrefs = [
-        "OJL150,12020,p5",
-        "OJS200,22021,p10",
-        "OJL50,32019,p15"
+        ("OJ No. L198, 25.7.2019. p.1.", "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv:OJ.L_.2019.198.01.0001.01.ENG"),
+        ("OJ No. L302, 17.11.2009, p. 32", "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv:OJ.L_.2009.302.01.0032.01.ENG"),
+        ("OJ No. L174, 1.7.2011, p. 1", "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv:OJ.L_.2011.174.01.0001.01.ENG")
     ]
     
-    for ojref in test_ojrefs:
-        match = patterns.parse_oj_reference(ojref)
+    for ojref, uri in test_ojrefs:
+        match = parse_ojref(ojref)
+        print(f"Parsed OJ reference: {ojref} -> {match}")
+        print(match)
         assert match is not None, f"Failed to parse OJ reference: {ojref}"
-        print(f"Parsed OJ reference: {ojref} -> Series: {match.group('series')}, Year: {match.group('year')}, Page: {match.group('page')}")
-    
+        assert match == uri, f"Incorrect URI for OJ reference: {ojref}"
     print("✅ All OJ reference tests passed!")
 
 def test_parse_p():
     """Test that parse_p function works as expected."""
     # Sample provision XML
-    provision_xml = E.p(
-        E.text("This is a sample provision text.")
-    )
-    
+    eisb_xml_file = TEST_DATA_PATH / "eisb_input" / "parse_p_input.eisb.xml"
+    expected_output_file = TEST_DATA_PATH / "akn_expected_output" / "expected_parse_p_output.xml"
+    with open(eisb_xml_file, "r", encoding="utf-8") as f:
+        eisb_xml_snippet = f.read()
+    p_transformed = transform_xml(eisb_xml_snippet)
+    provision_xml = etree.fromstring(p_transformed)
     # Parse the provision
-    status, provision = parse_p(provision_xml)
-    
-    assert status == "IDLE"
-    assert provision.text == "This is a sample provision text."
-    
+    p = parse_p(provision_xml)
+
+    with open(expected_output_file, "r", encoding="utf-8") as f:
+        expected_output = f.read()
+    assert p.text == " In this section and "
+    assert etree.tostring(p, pretty_print=True).decode("utf-8") == expected_output
     print("✅ parse_p test passed!")
 
 def test_make_container():
@@ -329,7 +335,7 @@ def test_section_hierarchy():
     
     print("✅ section hierarchy test passed!")
 
-def test_parse_body()::
+def test_parse_body():
     """Test that parse_body function works as expected."""
     from actsetl.parsers.eisb import parse_body
     
