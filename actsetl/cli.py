@@ -83,7 +83,6 @@ def parse_eisb(args):
         akn_notes(akn_act_root, notes)
 
     output_fn = args.output or str(AKN_DATA_DIR / args.input_xml.split("/")[-1].replace(".eisb.xml", ".akn.xml"))
-    print(output_fn)
     log.info("Writing output to %s", output_fn)
 
     akn_write(akn_act_root, output_fn, validate=not args.no_validate)
@@ -110,7 +109,11 @@ def main():
     parser.add_argument("--logfile", help="Path to a file to write logs to.")
     args = parser.parse_args()
 
+
+
     parse_eisb(args)
 
 if __name__ == "__main__":
+    AKN_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
     main()
