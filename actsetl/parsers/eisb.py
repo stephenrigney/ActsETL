@@ -6,6 +6,8 @@ import logging
 import re
 import io
 from collections import namedtuple
+from dataclasses import dataclass
+from typing import Optional
 from pathlib import Path
 
 from lxml import etree
@@ -30,6 +32,19 @@ INSERTED_SECTION_THRESHOLD, PARAGRAPH_MARGIN_THRESHOLD, SUBPARAGRAPH_MARGIN_THRE
 # Data structure to hold parsed amendment metadata
 AmendmentMetadata = namedtuple("AmendmentMetadata", "type source_eId destination_uri position old_text new_text")
 ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
+
+
+@dataclass
+class ProvisionMetadata:
+    tag: Optional[str] = "tblock"
+    eid: Optional[str] = None
+    inserted: bool = False
+    pnumber: Optional[str] = None
+    hanging: int = 0
+    margin: int = 0
+    align: str = "left"
+    xml: Optional[etree._Element] = None
+    text: str = ""
 
 
 class RegexPatternLibrary:
@@ -344,7 +359,14 @@ def make_container(tag: str, num:E.b=None, heading:str=None, attribs:dict=None) 
     Generate a LegalDocML element with <tag> name and optional num/heading elements.
     """
     if not attribs: attribs = {}
-    container = E(tag, attribs)
+    # Build a safe attributes dict (coerce keys to strings, skip None keys)
+    safe_attribs = {}
+    for k, v in attribs.items():
+        if k is None or v is None:
+            # skip invalid attribute keys or None-valued attributes
+            continue
+        safe_attribs[str(k)] = str(v)
+    container = etree.Element(tag, attrib=safe_attribs)
     if heading is not None: container.append(heading)
     if num is not None: container.append(E.num(num))
     return container
@@ -415,10 +437,8 @@ def parse_section(sect: etree):
         hanging, margin, alignment = [int(i) for i in text_loc[:2]] + [text_loc[3]] if len(text_loc) == 6 else (0, 0, "left")
         text = "".join(p.xpath(".//text()")).strip()
         
-        # Default values
-        ptype = "tblock"
-        p_eid = None
-        inserted = False
+        # Default values encapsulated in ProvisionMetadata
+        meta = ProvisionMetadata(hanging=hanging, margin=margin, align=alignment, text=text)
 
         if p.tag == "table":
             raw_provisions.append(Provision("table", None, False, hanging, margin, alignment, parse_table(p), text))
@@ -433,14 +453,18 @@ def parse_section(sect: etree):
         if b is not None and b.tail is not None:
             etree.strip_elements(p, 'b', with_tail=False)
             if hanging + margin > INSERTED_SECTION_THRESHOLD:
-                ptype, inserted, pnumber, p_eid = "section", True, b.text.strip(), make_eid_snippet("sect", b.text.strip())
+                meta.tag = "section"
+                meta.inserted = True
+                meta.pnumber = (b.text or "").strip()
+                meta.eid = make_eid_snippet("sect", meta.pnumber)
         
         # Use RegexPatternLibrary for provision type matching
         provision_type, match = patterns.match_provision_type(p.text or "")
         
         if provision_type == 'subsection':
-            ptype, pnumber = "subsection", match.group(1)
-            p_eid = make_eid_snippet("subsect", pnumber)
+            meta.tag = "subsection"
+            meta.pnumber = match.group(1)
+            meta.eid = make_eid_snippet("subsect", meta.pnumber)
             p.text = p.text[match.end():].lstrip()
         elif provision_type == 'paragraph':
             ital = p.find("i")
@@ -451,37 +475,41 @@ def parse_section(sect: etree):
                 provision_type, match = patterns.match_provision_type(p.text or "")
             
             if provision_type == 'paragraph':
-                pnumber = match.group(1)
-                eid_number = "".join(d for d in pnumber if d.isalnum())
+                meta.pnumber = match.group(1)
+                eid_number = "".join(d for d in meta.pnumber if d.isalnum())
                 if margin == PARAGRAPH_MARGIN_THRESHOLD:
-                    ptype = "paragraph"
+                    meta.tag = "paragraph"
                 elif eid_number[0] in "ivx" and (margin == SUBPARAGRAPH_MARGIN_THRESHOLD or not is_huw):
-                    ptype = "subparagraph"
-                else: ptype = "paragraph"
+                    meta.tag = "subparagraph"
+                else:
+                    meta.tag = "paragraph"
                 p.text = p.text[match.end():].lstrip()
-                p_eid = make_eid_snippet("para" if ptype == "paragraph" else "subpara", pnumber)
-                is_huw = pnumber in "huw"
+                meta.eid = make_eid_snippet("para" if meta.tag == "paragraph" else "subpara", meta.pnumber)
+                is_huw = meta.pnumber in "huw"
         elif provision_type == 'clause':
-            ptype, pnumber = "clause", match.group(1)
-            p_eid = make_eid_snippet("clause", pnumber)
+            meta.tag = "clause"
+            meta.pnumber = match.group(1)
+            meta.eid = make_eid_snippet("clause", meta.pnumber)
             p.text = p.text[match.end():].lstrip()
         elif provision_type == 'subclause':
-            ptype, pnumber = "subclause", match.group(1)
-            p_eid = make_eid_snippet("subclause", pnumber)
+            meta.tag = "subclause"
+            meta.pnumber = match.group(1)
+            meta.eid = make_eid_snippet("subclause", meta.pnumber)
             p.text = p.text[match.end():].lstrip()
 
         parse_p(p)
 
-        xml_element = make_container(ptype, pnumber, attribs={"eId": p_eid})
+        xml_element = make_container(meta.tag, meta.pnumber, attribs={"eId": meta.eid})
+        meta.xml = xml_element
         
         raw_provisions.append(
             Provision(
-                ptype, p_eid, inserted, hanging, margin, alignment, 
+                meta.tag, meta.eid, meta.inserted, hanging, margin, alignment, 
                 xml_element, "".join(p.xpath(".//text()"))
             )
-            )
+        )
 
-        raw_provisions.append(Provision("tblock", None, inserted, hanging, margin, alignment, p, text))
+        raw_provisions.append(Provision("tblock", None, meta.inserted, hanging, margin, alignment, p, text))
         
 
         if text.endswith(CDQ) and text.count(CDQ) > text.count(ODQ):
