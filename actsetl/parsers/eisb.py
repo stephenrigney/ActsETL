@@ -25,14 +25,130 @@ XSLT_PATH = RESOURCES_PATH / 'xslt' / 'eisb_transform.xslt'
 
 ODQ, CDQ, OSQ, CSQ = "“", "”", '‘', '’'
 
+INSERTED_SECTION_THRESHOLD = 8 
+
 # Data structure to hold parsed amendment metadata
 AmendmentMetadata = namedtuple("AmendmentMetadata", "type source_eId destination_uri position old_text new_text")
 ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
 
 
+class RegexPatternLibrary:
+    """Centralized regex pattern library with compiled patterns and matching methods."""
+    
+    def __init__(self):
+        # Amendment instruction patterns
+        self.amendment_substitution = re.compile(
+            r"by the substitution of .* for (?P<old_dest>.+)", 
+            re.IGNORECASE
+        )
+        self.amendment_insertion_after = re.compile(
+            r"by the insertion of .* after (?P<dest>.+)", 
+            re.IGNORECASE
+        )
+        self.amendment_insertion_simple = re.compile(
+            r"by the insertion of the following definitions:", 
+            re.IGNORECASE
+        )
+        self.amendment_inline_substitution = re.compile(
+            r"by the substitution of (?P<new>[\"'\"'][^\"'\"']+[\"'\"']) for (?P<old>[\"'\"'][^\"'\"']+[\"'\"'])"
+        )
+        
+        # Destination URI pattern
+        self.destination_components = re.compile(
+            r'(section|subsect|paragraph) (\w+)'
+        )
+        
+        # OJ reference pattern
+        self.oj_reference = re.compile(
+            r"OJ(No)?(?P<series>[CL])(?P<number>\d+),\d+(?P<year>\d{4}),?p(?P<page>\d+)"
+        )
+        
+        # Provision identification patterns (use optional curly quote, capture the whole marker)
+        # Curly quotes are Unicode  \u201c (left) and \u201d (right)
+        self.subsection_pattern = re.compile(r"^\s?([\u201c\u201d]?\(\d+[A-Z]*\))")
+        self.paragraph_pattern = re.compile(r"^\s?([\u201c\u201d]?\([a-z]+\))")
+        self.clause_pattern = re.compile(r"^\s?([\u201c\u201d]?\([IVX]+\))")
+        self.subclause_pattern = re.compile(r"^\s?([\u201c\u201d]?\([A-Z]+\))")
+    
+    def match_amendment_instruction(self, text: str):
+        """
+        Match text against amendment instruction patterns.
+        Returns dictionary with parsed information, or None.
+        Order matters: more specific patterns first!
+        """
+        # Check inline substitution first (more specific)
+        match = self.amendment_inline_substitution.search(text)
+        if match:
+            # Strip both straight and curly quotes
+            quote_chars = '"\'"' + "'"
+            return {
+                'type': 'substitution',
+                'inline': True,
+                'new_text': match.group('new').strip(quote_chars),
+                'old_text': match.group('old').strip(quote_chars)
+            }
+        
+        # General substitution (less specific)
+        match = self.amendment_substitution.search(text)
+        if match:
+            return {
+                'type': 'substitution',
+                'destination_text': match.group('old_dest').strip(':')
+            }
+        
+        match = self.amendment_insertion_after.search(text)
+        if match:
+            return {
+                'type': 'insertion',
+                'position': 'after',
+                'destination_text': match.group('dest').strip(':')
+            }
+        
+        match = self.amendment_insertion_simple.search(text)
+        if match:
+            return {
+                'type': 'insertion',
+                'position': None,
+                'destination_text': ''
+            }
+        
+        return None
+    
+    def parse_destination_uri_components(self, text: str):
+        """Extract destination components from text."""
+        return self.destination_components.findall(text)
+    
+    def parse_oj_reference(self, text: str):
+        """Parse OJ reference, returns match object or None."""
+        return self.oj_reference.search(text)
+    
+    def match_provision_type(self, text: str):
+        """
+        Identify provision type from text.
+        Returns (provision_type, match_object) or (None, None).
+        """
+        match = self.subsection_pattern.match(text)
+        if match:
+            return ('subsection', match)
+        
+        match = self.paragraph_pattern.match(text)
+        if match:
+            return ('paragraph', match)
+        
+        match = self.clause_pattern.match(text)
+        if match:
+            return ('clause', match)
+        
+        match = self.subclause_pattern.match(text)
+        if match:
+            return ('subclause', match)
+        
+        return (None, None)
+
+
 class AmendmentParser:
     """A state machine for parsing amendments."""
-    def __init__(self, section_eid, principal_act_uri="#principal_act"):
+    def __init__(self, section_eid, principal_act_uri="#principal_act", patterns=None):
         self.state = "IDLE"  # Can be IDLE, PARSING_INSTRUCTION, CONSUMING_CONTENT
         self.section_eid = section_eid
         self.principal_act_uri = principal_act_uri
@@ -41,43 +157,20 @@ class AmendmentParser:
         self.current_mod_block = None
         self.current_amendment_details = {}
         self.content_buffer = []
+        self.patterns = patterns or RegexPatternLibrary()
 
     def _parse_instruction(self, text: str):
         """
         Parses amendment instruction text to extract action, destination, etc.
         Returns a dictionary with parsed information, or None.
         """
-        # Regex for full block substitution: "by the substitution of ... for ..."
-        subst_re = re.search(r"by the substitution of .* for (?P<old_dest>.+)", text, re.IGNORECASE)
-        if subst_re:
-            return {'type': 'substitution', 'destination_text': subst_re.group('old_dest').strip(':')}
-
-        # Regex for insertion: "by the insertion of ... after ..."
-        ins_re = re.search(r"by the insertion of .* after (?P<dest>.+)", text, re.IGNORECASE)
-        if ins_re:
-            return {'type': 'insertion', 'position': 'after', 'destination_text': ins_re.group('dest').strip(':')}
-
-        # Regex for simple insertion (no position): "in section X, by the insertion of the following..."
-        simple_ins_re = re.search(r"by the insertion of the following definitions:", text, re.IGNORECASE)
-        if simple_ins_re:
-             return {'type': 'insertion', 'position': None, 'destination_text': ''}
-
-        # Regex for inline substitution: "...by the substitution of 'new' for 'old'"
-        inline_sub_re = re.search(r"by the substitution of (?P<new>[“‘][^”’]+[”’]) for (?P<old>[“‘][^”’]+[”’])", text)
-        if inline_sub_re:
-            return {
-                'type': 'substitution',
-                'inline': True,
-                'new_text': inline_sub_re.group('new').strip("“‘”’"),
-                'old_text': inline_sub_re.group('old').strip("“‘”’")
-            }
-        return None
+        return self.patterns.match_amendment_instruction(text)
 
     def _generate_destination_uri(self, text):
         # This is a placeholder. A real implementation would need a robust way
         # to parse text like "section 118(5)" into a URI fragment.
         text = text.lower().replace("subsection", "subsect")
-        parts = re.findall(r'(section|subsect|paragraph) (\w+)', text)
+        parts = self.patterns.parse_destination_uri_components(text)
         if not parts:
             log.warning("Could not generate destination URI for: %s", text)
             return self.principal_act_uri
@@ -195,15 +288,15 @@ def transform_xml(infn: str) -> str:
     clean_xml = transform(xml_doc)
     return etree.tostring(clean_xml, pretty_print=True).decode("utf-8")
 
+# Module-level regex patterns instance
+_regex_patterns = RegexPatternLibrary()
+
 def parse_ojref(ojref:str) -> str:
     """
     Parses a footnote reference to the Official Journal of the EU (OJ[EU]) into Eurlex URI.
     """
     ojref = ojref.replace(".", "").replace(" ", "")
-    ojre = re.search(
-        "OJ(No)?(?P<series>[CL])(?P<number>\d+),\d+(?P<year>\d{4}),?p(?P<page>\d+)", 
-        ojref
-        )
+    ojre = _regex_patterns.parse_oj_reference(ojref)
     if not ojre:
         return ""
     sr, yr, num, pg = ojre.group("series"), ojre.group("year"), int(ojre.group("number")), int(ojre.group("page"))
@@ -309,7 +402,8 @@ def parse_section(sect: etree):
     sect_xml = make_container("section", num=E.b(snumber), heading=sheading, attribs={"eId": eid})
     
     log.info("Parsing section %s", snumber)
-    amendment_parser = AmendmentParser(eid)
+    patterns = RegexPatternLibrary()
+    amendment_parser = AmendmentParser(eid, patterns=patterns)
 
     # Pass 1: Convert all raw XML elements to Provision objects with correct tags
     raw_provisions = []
@@ -333,52 +427,48 @@ def parse_section(sect: etree):
         if not text:
             raw_provisions.append(Provision("tblock", None, False, hanging, margin, alignment, parse_p(p), text))
             continue
-
-
         
         # --- Start of preserved provision identification logic ---
         b = p.find("./b")
         if b is not None and b.tail is not None:
             etree.strip_elements(p, 'b', with_tail=False)
-            if hanging + margin > 8:
+            if hanging + margin > INSERTED_SECTION_THRESHOLD:
                 ptype, inserted, pnumber, p_eid = "section", True, b.text.strip(), make_eid_snippet("sect", b.text.strip())
         
-        subsect_re = re.match(r"^\s?(“?\(\d+[A-Z]*\))", p.text or "")
-        if subsect_re:
-            ptype, pnumber = "subsection", subsect_re.group(1)
-            p_eid = make_eid_snippet("subsect", pnumber)
-            p.text = p.text[subsect_re.end():].lstrip()
+        # Use RegexPatternLibrary for provision type matching
+        provision_type, match = patterns.match_provision_type(p.text or "")
         
-        ital = p.find("i")
-        if p.text == "(" and ital is not None and ital.tail and ital.tail.startswith(")"):
-            p.text += ital.text + ital.tail
-            p.remove(ital)
-
-        para_re = re.match(r"^\s?(“?\([a-z]+\))", p.text or "")
-        if para_re:
-            pnumber = para_re.group(1)
-            eid_number = "".join(d for d in pnumber if d.isalnum())
-            if margin == 14: 
-                ptype = "paragraph"
-            elif eid_number[0] in "ivx" and (margin == 17 or not is_huw):
-                ptype = "subparagraph"
-            else: ptype = "paragraph"
-            p.text = p.text[para_re.end():].lstrip()
-            p_eid = make_eid_snippet("para" if ptype == "paragraph" else "subpara", pnumber)
-            is_huw = pnumber in "huw"
-
-        clause_re = re.match(r"^\s?(“?\([IVX]+\))", p.text or "")
-        if clause_re:
-            ptype, pnumber = "clause", clause_re.group(1)
+        if provision_type == 'subsection':
+            ptype, pnumber = "subsection", match.group(1)
+            p_eid = make_eid_snippet("subsect", pnumber)
+            p.text = p.text[match.end():].lstrip()
+        elif provision_type == 'paragraph':
+            ital = p.find("i")
+            if p.text == "(" and ital is not None and ital.tail and ital.tail.startswith(")"):
+                p.text += ital.text + ital.tail
+                p.remove(ital)
+                # Re-check after normalizing italic tags
+                provision_type, match = patterns.match_provision_type(p.text or "")
+            
+            if provision_type == 'paragraph':
+                pnumber = match.group(1)
+                eid_number = "".join(d for d in pnumber if d.isalnum())
+                if margin == 14: 
+                    ptype = "paragraph"
+                elif eid_number[0] in "ivx" and (margin == 17 or not is_huw):
+                    ptype = "subparagraph"
+                else: ptype = "paragraph"
+                p.text = p.text[match.end():].lstrip()
+                p_eid = make_eid_snippet("para" if ptype == "paragraph" else "subpara", pnumber)
+                is_huw = pnumber in "huw"
+        elif provision_type == 'clause':
+            ptype, pnumber = "clause", match.group(1)
             p_eid = make_eid_snippet("clause", pnumber)
-            p.text = p.text[clause_re.end():].lstrip()
-
-        subclause_re = re.match(r"^\s?(“?\([A-Z]+\))", p.text or "")
-        if subclause_re:
-            ptype, pnumber = "subclause", subclause_re.group(1)
+            p.text = p.text[match.end():].lstrip()
+        elif provision_type == 'subclause':
+            ptype, pnumber = "subclause", match.group(1)
             p_eid = make_eid_snippet("subclause", pnumber)
-            p.text = p.text[subclause_re.end():].lstrip()
-        # --- End of preserved provision identification logic ---
+            p.text = p.text[match.end():].lstrip()
 
         parse_p(p)
 
