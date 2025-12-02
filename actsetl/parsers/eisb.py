@@ -290,14 +290,14 @@ class AmendmentParser:
 
         return ("IDLE", provision)
 
-def transform_xml(infn: str) -> str:
+def transform_xml(eisb_xml: str) -> str:
     '''
     Act XML published on eISB encodes certain special characters, including fadas and euro symbols, as XML nodes defined by the legislation.dtd schema. 
     These are converted to regular characters via an XSLT (eisb_transform.xslt) and the XML is then reserialised as utf-8
     '''
     with open(XSLT_PATH, encoding="utf-8") as f:
         leg_dtd_xslt = f.read()
-    xml_doc = etree.parse(infn)
+    xml_doc = etree.fromstring(eisb_xml)
     xslt_doc = etree.parse(io.StringIO(leg_dtd_xslt))
     transform = etree.XSLT(xslt_doc)
     clean_xml = transform(xml_doc)

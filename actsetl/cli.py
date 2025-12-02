@@ -41,7 +41,9 @@ def parse_eisb(args):
 
     log.info("Starting processing for %s", args.input_xml)
 
-    preprocessed_eisb_xml = transform_xml(args.input_xml)
+    with open(args.input_xml, encoding="utf-8") as f:
+        eisb_xml = f.read() 
+    preprocessed_eisb_xml = transform_xml(eisb_xml)
     xml_parser = etree.XMLParser(remove_blank_text=True)
 
     eisb_act = etree.fromstring(preprocessed_eisb_xml, parser=xml_parser)
