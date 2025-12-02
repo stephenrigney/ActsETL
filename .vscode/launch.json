@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: ActsETL",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "actsetl.cli",
+            "args": [
+                "tests/test_data/eisb_input/part_and_1_section.eisb.xml",
+                "--loglevel",
+                 "INFO"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

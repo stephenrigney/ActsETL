@@ -30,7 +30,7 @@ share/python-wheels/
 MANIFEST
 
 # VsCode
-launch.json
+# blaunch.json
 
 # Virtual Environments
 .env
