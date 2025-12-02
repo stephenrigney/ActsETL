@@ -2,16 +2,68 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: ActsETL",
-            "type": "debugpy",
+            "name": "Python: ActsETL (Local - launch)",
+            "type": "python",
             "request": "launch",
             "module": "actsetl.cli",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "install-requirements",
             "args": [
                 "tests/test_data/eisb_input/part_and_1_section.eisb.xml",
                 "--loglevel",
-                 "INFO"
+                "INFO"
             ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
             "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "Python: ActsETL (Codespaces - launch)",
+            "type": "python",
+            "request": "launch",
+            "module": "actsetl.cli",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "install-requirements",
+            "args": [
+                "tests/test_data/eisb_input/part_and_1_section.eisb.xml",
+                "--loglevel",
+                "INFO"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "Python: ActsETL (Attach - debugpy)",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                { "localRoot": "${workspaceFolder}", "remoteRoot": "${workspaceFolder}" }
+            ],
+            "justMyCode": true
+        },
+
+        {
+            "name": "Python: ActsETL (Attach - python)",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                { "localRoot": "${workspaceFolder}", "remoteRoot": "${workspaceFolder}" }
+            ],
             "justMyCode": true
         }
     ]

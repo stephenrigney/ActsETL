@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "install-requirements",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pip install -e .",
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
