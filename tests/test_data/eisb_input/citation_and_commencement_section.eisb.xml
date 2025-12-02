@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<act>
+    <metadata>
+        <title>EISB TEST ACT 2024</title>
+        <number>1</number>
+        <year>2024</year>
+        <dateofenactment>20240101</dateofenactment>
+    </metadata>
+    <frontmatter>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <acttoc>
+        </acttoc>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actsreferredto>
+            <title>
+                <p class="0 0 0 center 1 0" just="left">Acts Referred to</p>
+            </title>
+        </actsreferredto>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 8 0 left 1 0">An Act to provide for the making available for supply, without
+            charge, to certain women, of certain products used to alleviate the symptoms of
+            menopause; and, for that purpose, to amend the Health Act 1970 and the Health (Pricing
+            and Supply of Medical Goods) Act 2013; to amend the Health Insurance Act 1994 to specify
+            the amount of premium to be paid from the Risk Equalisation Fund in respect of certain
+            classes of insured persons from 1 April 2025; to amend the definition, in that Act, of
+            high cost claim; to amend the Stamp Duties Consolidation Act 1999; and to provide for
+            related matters.</p>
+        <p class="0 0 0 right 1 0">[1<i>st January</i>, 2024]</p>
+        <p class="-3 11 0 left 1 0">
+            <b>Be it enacted by the Oireachtas as follows:</b>
+        </p>
+    </frontmatter>
+    <body>
+        <sect>
+            <number>1.</number>
+            <title>
+                <p class="-3 11 0 left 1 0">
+                    <b>Short title, collective citations, construction and commencement</b>
+                </p>
+            </title>
+            <p class="-3 11 0 left 1 0"><b>1.</b> (1) This Act may be cited as the Health
+                Insurance (Amendment) and Health (Provision of Menopause Products) Act 2024.</p>
+            <p class="-3 11 0 left 1 0">(2) The Health Acts 1947 to 2022 and <i>Part 2</i>
+                (other than <i>section 5</i>) may be cited together as the Health Acts 1947 to
+                2024.</p>
+            <p class="-3 11 0 left 1 0">(3) The Health Insurance Acts 1994 to 2023 and <i>Part 3</i>
+                (other than <i>section 10</i>) may be cited together as the Health Insurance
+                Acts 1994 to 2024 and shall be construed together as one.</p>
+            <p class="-3 11 0 left 1 0">(4) <i>Sections 2</i> to <i>5</i> shall come into
+                operation on such day or days as the Minister for Health may by order or orders
+                appoint either generally or with reference to any particular purpose or
+                provision and different days may be so appointed for different purposes or
+                different provisions.</p>
+            <p class="-3 11 0 left 1 0">(5) <i>Sections 8</i> and <i>9</i> shall come into
+                operation on 1 April 2025.</p>
+            <p class="-3 11 0 left 1 0">(6) <i>Section 10</i> shall come into operation on 1
+                January 2025.</p>
+        </sect>
+    </body>
+</act>

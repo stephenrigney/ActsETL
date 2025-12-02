@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<act>
+    <metadata>
+        <title>EISB TEST ACT 2024</title>
+        <number>1</number>
+        <year>2024</year>
+        <dateofenactment>20240101</dateofenactment>
+    </metadata>
+    <frontmatter>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <acttoc>
+        </acttoc>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actsreferredto>
+            <title>
+                <p class="0 0 0 center 1 0" just="left">Acts Referred to</p>
+            </title>
+        </actsreferredto>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 8 0 left 1 0">An Act to provide for the making available for supply, without
+            charge, to certain women, of certain products used to alleviate the symptoms of
+            menopause; and, for that purpose, to amend the Health Act 1970 and the Health (Pricing
+            and Supply of Medical Goods) Act 2013; to amend the Health Insurance Act 1994 to specify
+            the amount of premium to be paid from the Risk Equalisation Fund in respect of certain
+            classes of insured persons from 1 April 2025; to amend the definition, in that Act, of
+            high cost claim; to amend the Stamp Duties Consolidation Act 1999; and to provide for
+            related matters.</p>
+        <p class="0 0 0 right 1 0">[1<i>st January</i>, 2024]</p>
+        <p class="-3 11 0 left 1 0">
+            <b>Be it enacted by the Oireachtas as follows:</b>
+        </p>
+    </frontmatter>
+    <body>
+        <sect>
+            <number>2.</number>
+            <title>
+                <p class="-3 11 0 left 1 0">
+                    <b>Definitions</b>
+                </p>
+            </title>
+            <p class="-3 11 0 left 1 0"><b>2.</b> In this Act<emdash /></p>
+            <p class="0 11 0 left 1 0"><odq />AE provider scheme<cdq /> shall be construed in
+                accordance with <i>section 69(2)</i>;</p>
+            <p class="0 11 0 left 1 0"><odq />Authority<cdq /> has the meaning given by <i>section 8</i>
+                ;</p>
+            <p class="0 11 0 left 1 0"><odq />company<cdq /> means<emdash /></p>
+            <p class="-3 14 0 left 1 0">(a) a company formed and registered under the Companies Act
+                2014, or</p>
+            <p class="-3 14 0 left 1 0">(b) an existing company within the meaning of that Act;</p>
+            <p class="0 11 0 left 1 0"><odq />contributing participant<cdq /> shall be construed in
+                accordance with <i>section 57</i>;</p>
+            <p class="0 11 0 left 1 0"><odq />contribution<cdq /> means a participant contribution,
+                an employer contribution or a State contribution;</p>
+            <p class="0 11 0 left 1 0"><odq />employee<cdq /> has the meaning given by <i>section 47</i>
+                ;</p>
+            <p class="0 11 0 left 1 0"><odq />employer<cdq /> has the meaning given by <i>section 47</i>
+                ;</p>
+            <p class="0 11 0 left 1 0"><odq />employer contribution<cdq /> means a contribution to
+                which <i>section 59(2)</i> applies;</p>
+            <p class="0 11 0 left 1 0"><odq />enactment<cdq /> has the same meaning as it has in the
+                Interpretation Act 2005;</p>
+            <p class="0 11 0 left 1 0"><odq />enrolment date<cdq />, in relation to a person, means
+                the date assigned as that person<csq />s enrolment date under <i>section 50(1)</i>
+                or <i>section 53(1)</i>;</p>
+            <p class="0 11 0 left 1 0"><odq />European Union act<cdq /> means<emdash /></p>
+            <p class="-3 14 0 left 1 0">(a) a provision of the treaties governing the European
+                Union, or</p>
+            <p class="-3 14 0 left 1 0">(b) an act or provision of an act adopted by an institution
+                of the European Union, an institution of the European Communities or any other body
+                competent under those treaties;</p>
+            <p class="0 11 0 left 1 0"><odq />State contribution<cdq /> means a contribution to
+                which <i>section 60</i> applies.</p>
+        </sect>
+    </body>
+</act>

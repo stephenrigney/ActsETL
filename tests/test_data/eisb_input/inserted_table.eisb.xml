@@ -1,0 +1,183 @@
+<?xml version="1.0"?>
+<act>
+    <metadata>
+        <title>EISB TEST ACT 2024</title>
+        <number>1</number>
+        <year>2024</year>
+        <dateofenactment>20240101</dateofenactment>
+    </metadata>
+    <frontmatter>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <acttoc>
+        </acttoc>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actsreferredto>
+            <title>
+                <p class="0 0 0 center 1 0" just="left">Acts Referred to</p>
+            </title>
+        </actsreferredto>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 8 0 left 1 0">An Act to provide for the making available for supply, without
+            charge, to certain women, of certain products used to alleviate the symptoms of
+            menopause; and, for that purpose, to amend the Health Act 1970 and the Health (Pricing
+            and Supply of Medical Goods) Act 2013; to amend the Health Insurance Act 1994 to specify
+            the amount of premium to be paid from the Risk Equalisation Fund in respect of certain
+            classes of insured persons from 1 April 2025; to amend the definition, in that Act, of
+            high cost claim; to amend the Stamp Duties Consolidation Act 1999; and to provide for
+            related matters.</p>
+        <p class="0 0 0 right 1 0">[1<i>st January</i>, 2024]</p>
+        <p class="-3 11 0 left 1 0">
+            <b>Be it enacted by the Oireachtas as follows:</b>
+        </p>
+    </frontmatter>
+    <body>
+        <sect>
+            <number>9.</number>
+            <title>
+                <p class="-3 11 0 left 1 0">
+                    <b>Amendment of Schedule 4 to Act of 1994</b>
+                </p>
+            </title>
+            <p class="-3 11 0 left 1 0"><b>9.</b> Schedule 4 to the Act of 1994 is amended by the
+                substitution of the following Table for Table 2:</p>
+            <p class="0 0 0 center 1 0"><odq />Table 2</p>
+            <p class="0 0 0 center 1 0">
+                <i>AMOUNTS APPLICABLE ON OR AFTER 1 APRIL 2025</i>
+            </p>
+            <table width="100%" class="0 0 0 left 0 0" xmlns:x="http://www.w3.org/TR/REC-html40">
+                <colgroup>
+                    <col width="70%" />
+                    <col width="30%" />
+                </colgroup>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">
+                            <b>Class of Insured Person</b>
+                        </p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">
+                            <b>Amount of premium to be paid from Fund</b>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Male aged 70 years and over but less than 75
+                            years on the date the relevant contract (being a relevant contract
+                            (non-advanced cover)) is renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />350</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Male aged 70 years and over but less than 75
+                            years on the date the relevant contract (being a relevant contract
+                            (advanced cover)) is renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />1,625</p>
+                    </td>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Female aged 80 years and over but less than 85
+                            years on the date the relevant contract (being a relevant contract
+                            (non-advanced cover)) is renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />475</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Female aged 80 years and over but less than 85
+                            years on the date the relevant contract (being a relevant contract
+                            (advanced cover)) is renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />1,775</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Male aged 85 years and over on the date the
+                            relevant contract (being a relevant contract (non-advanced cover))
+                            is renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />650</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Male aged 85 years and over on the date the
+                            relevant contract (being a relevant contract (advanced cover)) is
+                            renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />2,625</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Female aged 85 years and over on the date the
+                            relevant contract (being a relevant contract (non-advanced cover))
+                            is renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />475</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0">Female aged 85 years and over on the date the
+                            relevant contract (being a relevant contract (advanced cover)) is
+                            renewed or entered into, as the case may be</p>
+                    </td>
+                    <td colspan="1" rowspan="1" valign="top">
+                        <p class="0 0 0 left 1 0"><euro />1,775</p>
+                    </td>
+                </tr>
+            </table>
+            <p class="0 0 0 right 1 0"><cdq />.</p>
+        </sect>
+    </body>
+</act>

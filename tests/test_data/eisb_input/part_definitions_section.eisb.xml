@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<act>
+    <metadata>
+        <title>EISB TEST ACT 2024</title>
+        <number>1</number>
+        <year>2024</year>
+        <dateofenactment>20240101</dateofenactment>
+    </metadata>
+    <frontmatter>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <acttoc>
+        </acttoc>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actsreferredto>
+            <title>
+                <p class="0 0 0 center 1 0" just="left">Acts Referred to</p>
+            </title>
+        </actsreferredto>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 8 0 left 1 0">An Act to provide for the making available for supply, without
+            charge, to certain women, of certain products used to alleviate the symptoms of
+            menopause; and, for that purpose, to amend the Health Act 1970 and the Health (Pricing
+            and Supply of Medical Goods) Act 2013; to amend the Health Insurance Act 1994 to specify
+            the amount of premium to be paid from the Risk Equalisation Fund in respect of certain
+            classes of insured persons from 1 April 2025; to amend the definition, in that Act, of
+            high cost claim; to amend the Stamp Duties Consolidation Act 1999; and to provide for
+            related matters.</p>
+        <p class="0 0 0 right 1 0">[1<i>st January</i>, 2024]</p>
+        <p class="-3 11 0 left 1 0">
+            <b>Be it enacted by the Oireachtas as follows:</b>
+        </p>
+    </frontmatter>
+    <body>
+        <part>
+            <title>
+                <p class="0 0 0 center 1 0" just="left">
+                    <font size="large" smallcaps="no">
+                        <b>PART 4</b>
+                    </font>
+                </p>
+                <p class="0 0 0 center 1 0" just="center">
+                    <font size="normal" smallcaps="yes">
+                        <b>Investment</b>
+                    </font>
+                </p>
+            </title>
+            <sect>
+                <number>67.</number>
+                <title>
+                    <p class="-3 11 0 left 1 0">
+                        <b>Definitions (<i>Part 4)</i></b>
+                    </p>
+                </title>
+                <p class="-3 11 0 left 1 0"><b>67.</b> In this Part<emdash /></p>
+                <p class="0 11 0 left 1 0"><odq />AE provider scheme<cdq /> has the meaning given by <i>section
+                    69(2)</i>;</p>
+                <p class="0 11 0 left 1 0"><odq />alternative investment fund<cdq /> has the same
+                    meaning as in the European Union (Alternative Investment Fund Managers)
+                    Regulations 2013 (S.I. No. 257 of 2013);</p>
+                <p class="0 11 0 left 1 0"><odq />appropriate risk level<cdq /> shall be construed
+                    in accordance with <i>section 70(2)</i> and <i>(3)</i>;</p>
+                <p class="0 11 0 left 1 0"><odq />investment management contract<cdq /> shall be
+                    construed in accordance with <i>section 68(3)</i>;</p>
+                <p class="0 11 0 left 1 0"><odq />risk level<cdq /> means a risk level specified in,
+                    or in regulations under, <i>section 69</i>;</p>
+                <p class="0 11 0 left 1 0"><odq />UCITS<cdq /> means a collective investment scheme
+                    authorised by the Central Bank under the European Communities (Undertakings for
+                    Collective Investment in Transferable Securities) Regulations 2011 (S.I. No. 352
+                    of 2011);</p>
+                <p class="0 11 0 left 1 0"><odq />unit<cdq />, in relation to an AE provider scheme,
+                    includes a share and any other instrument granting an entitlement to share in
+                    the investments or relevant income of a UCITS or an alternative investment fund.</p>
+            </sect>
+        </part>
+    </body>
+</act>

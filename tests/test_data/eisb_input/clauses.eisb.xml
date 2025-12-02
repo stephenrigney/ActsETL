@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<act>
+    <metadata>
+        <title>EISB TEST ACT 2024</title>
+        <number>1</number>
+        <year>2024</year>
+        <dateofenactment>20240101</dateofenactment>
+    </metadata>
+    <frontmatter>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 0 0 center 1 0">
+            <hr1 />
+        </p>
+        <acttoc>
+        </acttoc>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actsreferredto>
+            <title>
+                <p class="0 0 0 center 1 0" just="left">Acts Referred to</p>
+            </title>
+        </actsreferredto>
+        <p class="0 0 0 center 1 0" just="left">
+            <graphic href="harp.jpg" quality="GOOD" />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <actnumber>
+            <p class="0 0 0 center 1 0" just="left"><i>Number</i> 1 <i>of</i> 2024</p>
+        </actnumber>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 0 0 center 1 0" just="left">
+            <b>EISB TEST ACT 2024</b>
+        </p>
+        <p class="0 6 4 center 1 0" just="left">
+            <hr1 />
+        </p>
+        <p class="0 8 0 left 1 0">An Act to provide for the making available for supply, without
+            charge, to certain women, of certain products used to alleviate the symptoms of
+            menopause; and, for that purpose, to amend the Health Act 1970 and the Health (Pricing
+            and Supply of Medical Goods) Act 2013; to amend the Health Insurance Act 1994 to specify
+            the amount of premium to be paid from the Risk Equalisation Fund in respect of certain
+            classes of insured persons from 1 April 2025; to amend the definition, in that Act, of
+            high cost claim; to amend the Stamp Duties Consolidation Act 1999; and to provide for
+            related matters.</p>
+        <p class="0 0 0 right 1 0">[1<i>st January</i>, 2024]</p>
+        <p class="-3 11 0 left 1 0">
+            <b>Be it enacted by the Oireachtas as follows:</b>
+        </p>
+    </frontmatter>
+    <body>
+        <sect>
+            <number>11.</number>
+            <title>
+                <p class="-3 11 0 left 1 0">
+                    <b>Amendment of section 121A of Principal Act (benefit of use of van)</b>
+                </p>
+            </title>
+            <p class="-3 11 0 left 1 0"><b>11.</b> Section 121A(2)(b) of the Principal Act is
+                amended<emdash /></p>
+            <p class="-3 14 0 left 1 0">(a) in subparagraph (vii)(III), by the substitution of <odq />subject
+                to subparagraph (viii), <euro />35,000<cdq /> for <odq /><euro />35,000<cdq />,</p>
+            <p class="-3 14 0 left 1 0">(b) in subparagraph (viii),</p>
+            <p class="-3 17 0 left 1 0">(i) by the substitution of <odq />years of assessment 2023,
+                2024 and 2025<cdq /> for <odq />years of assessment 2023 and 2024<cdq />, and</p>
+            <p class="-3 17 0 left 1 0">(ii) in clause (I)<emdash /></p>
+            <p class="-3 20 0 left 1 0">(I) by the substitution of <odq />clause (I), (II) or (III)<cdq />
+                for <odq />clause (I) or (II)<cdq />, and</p>
+            <p class="-3 20 0 left 1 0">(II) in subclause (A) by the substitution of <odq />clause
+                (I), (II) or (III)<cdq /> for <odq />clause (I) or (II)<cdq />.</p>
+        </sect>
+    </body>
+</act>
