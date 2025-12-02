@@ -25,7 +25,7 @@ XSLT_PATH = RESOURCES_PATH / 'xslt' / 'eisb_transform.xslt'
 
 ODQ, CDQ, OSQ, CSQ = "“", "”", '‘', '’'
 
-INSERTED_SECTION_THRESHOLD = 8 
+INSERTED_SECTION_THRESHOLD, PARAGRAPH_MARGIN_THRESHOLD, SUBPARAGRAPH_MARGIN_THRESHOLD = 8, 14, 17
 
 # Data structure to hold parsed amendment metadata
 AmendmentMetadata = namedtuple("AmendmentMetadata", "type source_eId destination_uri position old_text new_text")
@@ -453,9 +453,9 @@ def parse_section(sect: etree):
             if provision_type == 'paragraph':
                 pnumber = match.group(1)
                 eid_number = "".join(d for d in pnumber if d.isalnum())
-                if margin == 14: 
+                if margin == PARAGRAPH_MARGIN_THRESHOLD:
                     ptype = "paragraph"
-                elif eid_number[0] in "ivx" and (margin == 17 or not is_huw):
+                elif eid_number[0] in "ivx" and (margin == SUBPARAGRAPH_MARGIN_THRESHOLD or not is_huw):
                     ptype = "subparagraph"
                 else: ptype = "paragraph"
                 p.text = p.text[match.end():].lstrip()
