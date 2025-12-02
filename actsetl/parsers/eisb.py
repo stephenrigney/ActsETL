@@ -15,7 +15,7 @@ from lxml.builder import E
 from dateutil.parser import parse as dtparse
 
 from actsetl.akn.utils import (
-    akn_write, akn_root, akn_notes, active_mods, parsing_errors_writer )
+    akn_root, akn_notes, active_mods, parsing_errors_writer )
 from actsetl.akn.skeleton import akn_skeleton
 
 
@@ -579,12 +579,14 @@ def section_hierarchy(subdivs: list) -> E.section:
         if subdiv.tag == "mod_block":
             container = parent.find("content")
             if container is None:
-                container = E.content(); parent.append(container)
+                container = E.content()
+                parent.append(container)
             container.append(subdiv.xml)
         elif subdiv.tag in ["tblock", "table"]:
             container = parent.find("content")
             if container is None:
-                container = E.content(); parent.append(container)
+                container = E.content()
+                parent.append(container)
             container.append(subdiv.xml)
         else:
             # Hierarchy logic based on tag

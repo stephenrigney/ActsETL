@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='utf-8'?>
+<akomaNtoso xmlns="http://docs.oasis-open.org/legaldocml/ns/akn/3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://docs.oasis-open.org/legaldocml/ns/akn/3.0 http://docs.oasis-open.org/legaldocml/akn-core/v1.0/cos01/part2-specs/schemas/akomantoso30.xsd">
+  <act name="ActOfTheOireachtas">
+    <meta>
+      <identification source="#source">
+        <FRBRWork>
+          <FRBRthis value="/eli/ie/oireachtas/2024/act/1" showAs="EISB TEST ACT 2024"/>
+          <FRBRuri value="/eli/ie/oireachtas/2024/act/1"/>
+          <FRBRdate date="2024-01-01" name="enacted"/>
+          <FRBRauthor href="#source"/>
+          <FRBRcountry value="ie"/>
+          <FRBRnumber value="1"/>
+          <FRBRname value="EISB TEST ACT 2024"/>
+        </FRBRWork>
+        <FRBRExpression>
+          <FRBRthis value="/eli/ie/oireachtas/2024/act/1/enacted/en"/>
+          <FRBRuri value="/eli/ie/oireachtas/2024/act/1/enacted/en"/>
+          <FRBRdate date="2024-01-01" name="enacted"/>
+          <FRBRauthor href="#source"/>
+          <FRBRauthoritative value="true"/>
+          <FRBRlanguage language="eng"/>
+        </FRBRExpression>
+        <FRBRManifestation>
+          <FRBRthis value="/eli/ie/oireachtas/2024/act/1/enacted/en/akn"/>
+          <FRBRuri value="/eli/ie/oireachtas/2024/act/1/enacted/en/akn"/>
+          <FRBRdate date="2025-12-02" name="transformed"/>
+          <FRBRauthor href="#source"/>
+          <FRBRformat value="application/akn+xml"/>
+        </FRBRManifestation>
+      </identification>
+      <analysis source="#source"/>
+      <references source="#source">
+        <TLCOrganization eId="source" href="https://www.data.oireachtas.ie" showAs="Houses of the Oireachtas"/>
+      </references>
+    </meta>
+    <coverPage>
+      <p class="harp">
+        <img src="https://www.irishstatutebook.ie/static/images/base/harp.jpg"/>
+      </p>
+      <p class="Number">
+        <docNumber><i>Number </i>1<i> of </i>2024</docNumber>
+      </p>
+      <p class="shortTitle">
+        <shortTitle>EISB TEST ACT 2024</shortTitle>
+      </p>
+      <p>CONTENTS</p>
+    </coverPage>
+    <preface>
+      <p class="harp">
+        <img src="https://www.irishstatutebook.ie/static/images/base/harp.jpg"/>
+      </p>
+      <p class="Number">
+        <docNumber><i>Number </i>1<i> of </i>2024</docNumber>
+      </p>
+      <p class="shortTitle">
+        <shortTitle>EISB TEST ACT 2024</shortTitle>
+      </p>
+      <longTitle>
+        <p>An Act to provide for the making available for supply, without
+            charge, to certain women, of certain products used to alleviate the symptoms of
+            menopause; and, for that purpose, to amend the Health Act 1970 and the Health (Pricing
+            and Supply of Medical Goods) Act 2013; to amend the Health Insurance Act 1994 to specify
+            the amount of premium to be paid from the Risk Equalisation Fund in respect of certain
+            classes of insured persons from 1 April 2025; to amend the definition, in that Act, of
+            high cost claim; to amend the Stamp Duties Consolidation Act 1999; and to provide for
+            related matters.</p>
+      </longTitle>
+      <p class="DateOfEnactment">
+        <docDate date="2024-01-01">[1st January, 2024]</docDate>
+      </p>
+      <formula name="EnactingText">
+        <p>Be it enacted by the Oireachtas as follows:</p>
+      </formula>
+    </preface>
+    <body>
+      <section eId="sect_1">
+        <heading>
+          <b>Short title, collective citations, construction and commencement</b>
+        </heading>
+        <num>
+          <b>1.</b>
+        </num>
+        <subsection eId="sect_1_subsect_1">
+          <num>(1)</num>
+          <content>
+            <p>This Act may be cited as the Health
+                Insurance (Amendment) and Health (Provision of Menopause Products) Act 2024.</p>
+          </content>
+        </subsection>
+        <subsection eId="sect_1_subsect_2">
+          <num>(2)</num>
+          <content>
+            <p>The Health Acts 1947 to 2022 and <i>Part 2</i>
+                (other than <i>section 5</i>) may be cited together as the Health Acts 1947 to
+                2024.</p>
+          </content>
+        </subsection>
+        <subsection eId="sect_1_subsect_3">
+          <num>(3)</num>
+          <content>
+            <p>The Health Insurance Acts 1994 to 2023 and <i>Part 3</i>
+                (other than <i>section 10</i>) may be cited together as the Health Insurance
+                Acts 1994 to 2024 and shall be construed together as one.</p>
+          </content>
+        </subsection>
+        <subsection eId="sect_1_subsect_4">
+          <num>(4)</num>
+          <content>
+            <p><i>Sections 2</i> to <i>5</i> shall come into
+                operation on such day or days as the Minister for Health may by order or orders
+                appoint either generally or with reference to any particular purpose or
+                provision and different days may be so appointed for different purposes or
+                different provisions.</p>
+          </content>
+        </subsection>
+        <subsection eId="sect_1_subsect_5">
+          <num>(5)</num>
+          <content>
+            <p><i>Sections 8</i> and <i>9</i> shall come into
+                operation on 1 April 2025.</p>
+          </content>
+        </subsection>
+        <subsection eId="sect_1_subsect_6">
+          <num>(6)</num>
+          <content>
+            <p><i>Section 10</i> shall come into operation on 1
+                January 2025.</p>
+          </content>
+        </subsection>
+      </section>
+    </body>
+  </act>
+</akomaNtoso>

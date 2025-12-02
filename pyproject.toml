@@ -20,3 +20,7 @@ actsetl = "actsetl.cli:main"
 # A comma-separated list of package or module names from C extensions that
 # should be loaded and inspected.
 extension-pkg-allow-list = "lxml"
+
+[tool.setuptools.packages.find]
+include = ["actsetl*"]
+exclude = ["data*"]

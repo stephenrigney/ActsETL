@@ -9,9 +9,9 @@
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "install-requirements",
             "args": [
-                "tests/test_data/eisb_input/part_and_1_section.eisb.xml",
+                "tests/test_data/eisb_input/inline_amendments_nested.eisb.xml",
                 "--loglevel",
-                "INFO"
+                "DEBUG"
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
@@ -28,9 +28,9 @@
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "install-requirements",
             "args": [
-                "tests/test_data/eisb_input/part_and_1_section.eisb.xml",
+                "tests/test_data/eisb_input/citation_and_commencement_section.eisb.xml",
                 "--loglevel",
-                "INFO"
+                "DEBUG"
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
