@@ -13,7 +13,7 @@ from lxml.builder import E
 from dateutil.parser import parse as dtparse
 
 from actsetl.akn.utils import (
-    akn_write, akn_root, akn_notes, active_mods, parsing_errors_writer )
+    akn_root, akn_notes, active_mods, parsing_errors_writer )
 from actsetl.akn.skeleton import akn_skeleton
 
 
@@ -60,7 +60,7 @@ class AmendmentParser:
         # Regex for simple insertion (no position): "in section X, by the insertion of the following..."
         simple_ins_re = re.search(r"by the insertion of the following definitions:", text, re.IGNORECASE)
         if simple_ins_re:
-             return {'type': 'insertion', 'position': None, 'destination_text': ''}
+            return {'type': 'insertion', 'position': None, 'destination_text': ''}
 
         # Regex for inline substitution: "...by the substitution of 'new' for 'old'"
         inline_sub_re = re.search(r"by the substitution of (?P<new>[“‘][^”’]+[”’]) for (?P<old>[“‘][^”’]+[”’])", text)
@@ -201,7 +201,7 @@ def parse_ojref(ojref:str) -> str:
     """
     ojref = ojref.replace(".", "").replace(" ", "")
     ojre = re.search(
-        "OJ(No)?(?P<series>[CL])(?P<number>\d+),\d+(?P<year>\d{4}),?p(?P<page>\d+)", 
+        r"OJ(No)?(?P<series>[CL])(?P<number>\d+),\d+(?P<year>\d{4}),?p(?P<page>\d+)", 
         ojref
         )
     if not ojre:
@@ -322,9 +322,11 @@ def parse_section(sect: etree):
         text = "".join(p.xpath(".//text()")).strip()
         
         # Default values
-        ptype = "tblock"
+        ptype = None
         p_eid = None
         inserted = False
+        pnumber = None
+        p_eid = None
 
         if p.tag == "table":
             raw_provisions.append(Provision("table", None, False, hanging, margin, alignment, parse_table(p), text))
@@ -381,15 +383,15 @@ def parse_section(sect: etree):
         # --- End of preserved provision identification logic ---
 
         parse_p(p)
-
-        xml_element = make_container(ptype, pnumber, attribs={"eId": p_eid})
+        if ptype is not None:
+            xml_element = make_container(ptype, pnumber, attribs={"eId": p_eid} if p_eid else None)
         
-        raw_provisions.append(
-            Provision(
-                ptype, p_eid, inserted, hanging, margin, alignment, 
-                xml_element, "".join(p.xpath(".//text()"))
-            )
-            )
+            raw_provisions.append(
+                Provision(
+                    ptype, p_eid, inserted, hanging, margin, alignment, 
+                    xml_element, "".join(p.xpath(".//text()"))
+                )
+                )
 
         raw_provisions.append(Provision("tblock", None, inserted, hanging, margin, alignment, p, text))
         
@@ -461,12 +463,14 @@ def section_hierarchy(subdivs: list) -> E.section:
         if subdiv.tag == "mod_block":
             container = parent.find("content")
             if container is None:
-                container = E.content(); parent.append(container)
+                container = E.content()
+                parent.append(container)
             container.append(subdiv.xml)
         elif subdiv.tag in ["tblock", "table"]:
             container = parent.find("content")
             if container is None:
-                container = E.content(); parent.append(container)
+                container = E.content()
+                parent.append(container)
             container.append(subdiv.xml)
         else:
             # Hierarchy logic based on tag
