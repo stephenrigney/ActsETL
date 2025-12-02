@@ -1,10 +1,16 @@
 """
 Command-line interface for ActsETL.
 """
+import sys
+from pathlib import Path
+if __name__ == "__main__" and __package__ is None:
+    project_root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(project_root))
 
 import logging
 import argparse
 import yaml
+from pathlib import Path
 
 from lxml import etree
 
@@ -17,27 +23,13 @@ from actsetl.akn.utils import (
     akn_root, akn_notes, akn_write, pop_styles
 )
 
+AKN_DATA_DIR = Path(__file__).parent.parent / "data" / "akn"
 
-def main():
-    """Main entry point for the script.
+def parse_eisb(args):
+    '''
+    Process an eISB XML file into an Akoma Ntoso XML file.
     
-    python -m actsetl.cli data/eisb/act_6_2025.eisb.xml data/akn/act_6_2025.akn.xml
-
-    """
-    parser = argparse.ArgumentParser(description="Parse Irish Act XML into LegalDocML.")
-    parser.add_argument("input_xml", help="Path to the source eISB XML file.")
-    parser.add_argument("output_akn", help="Path for the output Akoma Ntoso XML file.")
-    parser.add_argument("--notes", default=None, help="Path to the notes YAML file.")
-    parser.add_argument("--styles", action="store_false", help="Remove styles.")   
-    parser.add_argument("--no-validate", action="store_true", help="Disable XML schema validation.")
-    parser.add_argument(
-        "--loglevel",
-        default="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Set the logging level (default: INFO)",
-    )
-    parser.add_argument("--logfile", help="Path to a file to write logs to.")
-    args = parser.parse_args()
+    '''
 
     logging.basicConfig(
         level=args.loglevel,
@@ -73,7 +65,7 @@ def main():
         pop_styles(akn_act_root)
 
     # New logic to build and insert the <activeModifications> block
-    if all_mod_info:
+    if len(all_mod_info):
         log.info("Building active modifications block.")
         analysis_block = akn_act.find("./meta/analysis")
         if analysis_block is not None:
@@ -90,9 +82,35 @@ def main():
             notes = yaml.safe_load(f)
         akn_notes(akn_act_root, notes)
 
-    akn_write(akn_act_root, args.output_akn, validate=not args.no_validate)
-    log.info("Successfully wrote output to %s", args.output_akn)
+    output_fn = args.output or str(AKN_DATA_DIR / args.input_xml.split("/")[-1].replace(".eisb.xml", ".akn.xml"))
+    print(output_fn)
+    log.info("Writing output to %s", output_fn)
 
+    akn_write(akn_act_root, output_fn, validate=not args.no_validate)
+    log.info("Successfully wrote output to %s", output_fn)
+
+def main():
+    """Main entry point for the script.
+    
+    python -m actsetl.cli data/eisb/act_6_2025.eisb.xml data/akn/act_6_2025.akn.xml
+
+    """
+    parser = argparse.ArgumentParser(description="Parse Irish Act XML into LegalDocML.")
+    parser.add_argument("input_xml", help="Path to the source eISB XML file.")
+    parser.add_argument("--output", default=None, help="Path for the output Akoma Ntoso XML file.")
+    parser.add_argument("--notes", default=None, help="Path to the notes YAML file.")
+    parser.add_argument("--styles", action="store_false", help="Remove styles.")   
+    parser.add_argument("--no-validate", action="store_true", help="Disable XML schema validation.")
+    parser.add_argument(
+        "--loglevel",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Set the logging level (default: INFO)",
+    )
+    parser.add_argument("--logfile", help="Path to a file to write logs to.")
+    args = parser.parse_args()
+
+    parse_eisb(args)
 
 if __name__ == "__main__":
     main()
