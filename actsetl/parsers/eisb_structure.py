@@ -8,11 +8,10 @@ from collections import namedtuple
 
 from lxml import etree
 from lxml.builder import E
-from dateutil.parser import parse as dtparse
 
-from actsetl.parsers.eisb_provisions import parse_section
+from actsetl.parsers.eisb_provisions import parse_section, parse_schedule
 
-from actsetl.parsers.common import XSLT_PATH, ActMeta
+from actsetl.parsers.common import XSLT_PATH
 
 
 log = logging.getLogger(__name__)
@@ -102,7 +101,6 @@ def section_hierarchy(subdivs: list) -> E.section:
     return sectionparent
 
 
-
 def fix_headings(act):
     """
     Identify and correctly tag headings in inserted text.
@@ -182,20 +180,6 @@ def generate_toc(act: etree) -> E:
             E.inline({"name": "tocHeading"}, heading)
         )
     )
-
-def act_metadata(act: etree) -> namedtuple: 
-    """
-    Parses Act metadata from eISB Act XML and returns as a named tuple.
-    """
-    metadata = act.find("metadata")
-    short_title, number, year = metadata.findtext("title"), metadata.findtext("number"), metadata.findtext("year")
-    log.info("Parsing metadata for: %s", short_title)
-    doe = metadata.findtext("dateofenactment")
-    date_enacted = dtparse(doe).date()
-    long_title_p = act.xpath("./frontmatter/p[(contains(text(), 'AN ACT TO')) or (contains(text(), 'An Act to'))]")[0]
-    return ActMeta(number, year, date_enacted, "enacted", short_title, parse_p(long_title_p))
-
-
 
 
 def build_active_modifications(mod_info_list: list) -> E:

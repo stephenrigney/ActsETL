@@ -10,8 +10,10 @@ import yaml
 
 from lxml import etree
 
+from actsetl.parsers.eisb_provisions import act_metadata
+
 from actsetl.parsers.eisb_structure import (
-    act_metadata, parse_body, transform_xml, build_active_modifications
+    parse_body, transform_xml, build_active_modifications, fix_headings
 )
 from actsetl.akn.skeleton import akn_skeleton
 from actsetl.akn.utils import (
@@ -65,7 +67,7 @@ def parse_eisb(args):
         pop_styles(akn_act_root)
 
     # New logic to build and insert the <activeModifications> block
-    if len(all_mod_info):
+    if len(all_mod_info) > 0:
         log.info("Building active modifications block.")
         analysis_block = akn_act.find("./meta/analysis")
         if analysis_block is not None:

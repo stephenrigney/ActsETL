@@ -4,12 +4,14 @@ Parses provisions of an Act
 import logging
 from typing import List, Tuple
 
+from dateutil.parser import parse as dtparse
 
 from lxml import etree
 from lxml.builder import E
 
 
 from actsetl.parsers.common import (
+    ActMeta,
     AmendmentMetadata,
     Provision,
     RegexPatternLibrary,
@@ -544,3 +546,15 @@ def parse_schedule(root, act):
         for p in sch.xpath("./p|./table"):
             schedule.find("content").append(parse_p(p) if p.tag == "p" else parse_table(p))
     return body
+
+def act_metadata(act: etree) -> ActMeta: 
+    """
+    Parses Act metadata from eISB Act XML and returns as a named tuple.
+    """
+    metadata = act.find("metadata")
+    short_title, number, year = metadata.findtext("title"), metadata.findtext("number"), metadata.findtext("year")
+    log.info("Parsing metadata for: %s", short_title)
+    doe = metadata.findtext("dateofenactment")
+    date_enacted = dtparse(doe).date()
+    long_title_p = act.xpath("./frontmatter/p[(contains(text(), 'AN ACT TO')) or (contains(text(), 'An Act to'))]")[0]
+    return ActMeta(number, year, date_enacted, "enacted", short_title, parse_p(long_title_p))

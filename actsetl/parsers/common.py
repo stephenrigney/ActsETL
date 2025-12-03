@@ -42,19 +42,6 @@ class Provision:
     text: str
     idx: int
 
-@dataclass
-class ProvisionMetadata:
-    tag: Optional[str] = "tblock"
-    eid: Optional[str] = None
-    inserted: bool = False
-    pnumber: Optional[str] = None
-    hanging: int = 0
-    margin: int = 0
-    align: str = "left"
-    xml: Optional[etree._Element] = None
-    text: str = ""
-
-
 class RegexPatternLibrary:
     """Centralized regex pattern library with compiled patterns and matching methods."""
     
