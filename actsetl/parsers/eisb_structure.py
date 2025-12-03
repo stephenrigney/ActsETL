@@ -1,26 +1,37 @@
 """
 Python module to parse Irish Act XML into LegalDocML.
 
+This module contains helpers to assemble LegalDocML subdivisions (sections,
+subsections, paragraphs etc.) from intermediate Provision-like structures
+returned from parse_section().
 """
-import logging
 import io
-from collections import namedtuple
+import logging
+from typing import List, Optional, Tuple
 
 from lxml import etree
 from lxml.builder import E
 
 from actsetl.parsers.eisb_provisions import parse_section, parse_schedule
-
 from actsetl.parsers.common import XSLT_PATH
-
 
 log = logging.getLogger(__name__)
 
+
+# Canonical ordering of structural tags (higher-level first)
+LEVELS = ("part", "chapter", "section", "subsection", "paragraph", "subparagraph", "clause", "subclause")
+
+# Inline content/container tags that should be appended into a parent's content
+INLINE_CONTAINER_TAGS = {"mod_block", "tblock", "table"}
+
+# Top-level structural tags for recursive body parsing
+TOPLEVEL_TAGS = ("part", "chapter", "division")
+
+
 def transform_xml(eisb_xml: str) -> str:
-    '''
-    Act XML published on eISB encodes certain special characters, including fadas and euro symbols, as XML nodes defined by the legislation.dtd schema. 
-    These are converted to regular characters via an XSLT (eisb_transform.xslt) and the XML is then reserialised as utf-8
-    '''
+    """
+    Convert eISB XML encoding of special characters to plain UTF-8 XML via XSLT.
+    """
     with open(XSLT_PATH, encoding="utf-8") as f:
         leg_dtd_xslt = f.read()
     xml_doc = etree.fromstring(eisb_xml)
@@ -29,76 +40,91 @@ def transform_xml(eisb_xml: str) -> str:
     clean_xml = transform(xml_doc)
     return etree.tostring(clean_xml, pretty_print=True).decode("utf-8")
 
-def locate_tag(parent, tags:list):
-    """
-    Finds location in hierarchy of element's parent.
-    """
-    if parent is None:
-        return None
-    if parent.tag in tags:
-        return parent
-    curr = parent.getparent()
-    while curr is not None:
-        if curr.tag in tags:
-            return curr
-        curr = curr.getparent()
-    return None
 
-def append_subdiv(parent_container: etree, subdiv: namedtuple) -> etree:
+def _get_level(tag: str) -> int:
+    """Return index for tag in LEVELS; unknown tags are treated as deepest level."""
+    try:
+        return LEVELS.index(tag)
+    except ValueError:
+        return len(LEVELS)
+
+
+def _ensure_content(parent: etree._Element) -> etree._Element:
+    """Return the <content> child of parent, creating it if absent."""
+    content = parent.find("content")
+    if content is None:
+        content = E.content()
+        parent.append(content)
+    return content
+
+
+def _generate_child_eid(parent_eid: Optional[str], child_eid: Optional[str]) -> Optional[str]:
+    """Generate concatenated eId for child when both parts are present."""
+    if not child_eid:
+        return None
+    if parent_eid:
+        return f"{parent_eid}_{child_eid}"
+    # Fallback: if parent missing, return the child id as-is but log warning
+    log.debug("Parent missing eId; using child eId '%s' without parent prefix", child_eid)
+    return child_eid
+
+
+def _append_subdiv(parent_container: etree._Element, subdiv) -> etree._Element:
     """
-    Appends a subdivision to its correct parent in the XML tree.
+    Append subdiv.xml to parent_container, set eId if possible, and normalize
+    the adjacent content/intro node if present.
+    subdiv is expected to have attributes 'xml' (etree element) and 'eid' (str | None).
     """
     if parent_container is None:
         raise ValueError(f"Cannot determine parent for subdivision: {etree.tostring(subdiv.xml)}")
-    
-    if subdiv.eid:
-        subdiv.xml.attrib['eId'] = f"{parent_container.attrib.get('eId')}_{subdiv.eid}"
+
+    parent_eid = parent_container.attrib.get("eId")
+    new_eid = _generate_child_eid(parent_eid, getattr(subdiv, "eid", None))
+    if new_eid:
+        subdiv.xml.attrib["eId"] = new_eid
     parent_container.append(subdiv.xml)
-    
-    pre = subdiv.xml.getprevious()
-    if pre is not None and pre.tag == "content":
-        pre.tag = "intro"
+
+    prev = subdiv.xml.getprevious()
+    if prev is not None and prev.tag == "content":
+        # If a content node precedes the appended node, convert it to intro
+        prev.tag = "intro"
     return subdiv.xml
 
-def section_hierarchy(subdivs: list) -> E.section:
+
+def section_hierarchy(subdivs: List[object]) -> Optional[etree._Element]:
     """
-    Arranges list of subdiv elements into section hierarchy.
+    Arrange a list of subdiv objects into a proper nested section hierarchy.
+
+    The first element in subdivs is treated as the section root. Each subsequent
+    subdiv is appended to the nearest ancestor whose LEVELS index is strictly
+    less than the subdiv's level. Inline/container tags (mod_block, tblock,
+    table) are appended into the nearest ancestor's <content>.
     """
-    if len(subdivs) == 0: 
+    if not subdivs:
         return None
-    sectionparent = parent = subdivs[0].xml
+
+    root = subdivs[0].xml
+    # Stack of (level_index, element) representing current path from root -> leaf
+    stack: List[Tuple[int, etree._Element]] = [(_get_level(root.tag), root)]
 
     for subdiv in subdivs[1:]:
-        if subdiv.tag == "mod_block":
-            container = parent.find("content")
-            if container is None:
-                container = E.content()
-                parent.append(container)
-            container.append(subdiv.xml)
-        elif subdiv.tag in ["tblock", "table"]:
-            container = parent.find("content")
-            if container is None:
-                container = E.content()
-                parent.append(container)
-            container.append(subdiv.xml)
-        else:
-            # Hierarchy logic based on tag
-            if subdiv.tag == "subsection":
-                tags = ["section"]
-            elif subdiv.tag == "paragraph":
-                tags = ["section", "subsection"]
-            elif subdiv.tag == "subparagraph": 
-                tags = ["section", "subsection", "paragraph"]
-            elif subdiv.tag == "clause": 
-                tags = ["section", "subsection", "paragraph", "subparagraph"]
-            elif subdiv.tag == "subclause": 
-                tags = ["section", "subsection", "paragraph", "subparagraph", "clause"]
-            else: 
-                tags = ["part", "chapter", "section", "subsection", "paragraph", "subparagraph", "clause", "subclause"]
-            
-            container = locate_tag(parent, tags) or sectionparent
-            parent = append_subdiv(container, subdiv)
-    return sectionparent
+        tag = getattr(subdiv, "tag", None) or subdiv.xml.tag
+        if tag in INLINE_CONTAINER_TAGS:
+            # Attach inline containers into the current leaf's content
+            parent = stack[-1][1]
+            _ensure_content(parent).append(subdiv.xml)
+            continue
+
+        lvl = _get_level(tag)
+        # Pop until we find a parent with a lower (higher-level) index
+        while stack and stack[-1][0] >= lvl:
+            stack.pop()
+        container = stack[-1][1] if stack else root
+        appended = _append_subdiv(container, subdiv)
+        # New current node becomes the appended subdiv
+        stack.append((lvl, appended))
+
+    return root
 
 
 def fix_headings(act):
@@ -113,38 +139,53 @@ def fix_headings(act):
                 idx = subdiv.index(ctr)
                 p.tag = "heading"
                 subdiv.insert(idx, p)
-                if not ctr.getchildren():
+                if not list(ctr):
                     subdiv.remove(ctr)
     return act
 
-def parse_body(eisb_parent: etree, akn_parent: E) -> tuple:
+
+def parse_body(eisb_parent: etree._Element, akn_parent: etree._Element) -> Tuple[etree._Element, List]:
     """
     Build out the LegalDocML skeleton with content from eISB XML.
+
+    Returns a tuple of (akn_parent, all_mod_info) where all_mod_info is a list
+    of amendment metadata collected from sections.
     """
     all_mod_info = []
-    toplevel_tags = ["part", "chapter", "division"]
-    for eisb_subdiv in eisb_parent.getchildren():
+    for eisb_subdiv in list(eisb_parent):
         if eisb_subdiv.tag == "sect":
             akn_section_subdivs, mod_info = parse_section(eisb_subdiv)
             all_mod_info.extend(mod_info)
             akn_section = section_hierarchy(akn_section_subdivs)
             if akn_section is not None:
                 akn_parent.append(akn_section)
-            
-        
-        elif eisb_subdiv.tag in toplevel_tags:
-            akn_toplevel_elem = parse_toplevel_elem(eisb_subdiv)
+
+        elif eisb_subdiv.tag in TOPLEVEL_TAGS:
+            # parse_toplevel_elem may be defined elsewhere; call it if present
+            try:
+                akn_toplevel_elem = parse_toplevel_elem(eisb_subdiv) # type: ignore:name
+            except NameError:
+                log.debug("parse_toplevel_elem not available; skipping toplevel element %s", eisb_subdiv.tag)
+                continue
 
             akn_parent.append(akn_toplevel_elem)
-            if akn_toplevel_elem.tag in toplevel_tags[1:]:
-                akn_toplevel_elem.attrib['eId'] = f"{akn_toplevel_elem.getparent().attrib['eId']}_{akn_toplevel_elem.attrib['eId']}"
-            
+            # Robustly generate combined eId if possible
+            parent_eid = akn_toplevel_elem.getparent().attrib.get("eId") if akn_toplevel_elem.getparent() is not None else None
+            elem_eid = akn_toplevel_elem.attrib.get("eId")
+            if elem_eid:
+                combined = _generate_child_eid(parent_eid, elem_eid)
+                if combined:
+                    akn_toplevel_elem.attrib["eId"] = combined
 
             _, mod_info = parse_body(eisb_subdiv, akn_toplevel_elem)
             all_mod_info.extend(mod_info)
+        else:
+            log.debug("Skipping unrecognized tag %s under %s", eisb_subdiv.tag, eisb_parent.tag)
+
     parse_schedule(eisb_parent, akn_parent)
     fix_headings(akn_parent)
     return akn_parent, all_mod_info
+
 
 def generate_toc(act: etree) -> E:
     """
@@ -197,4 +238,3 @@ def build_active_modifications(mod_info_list: list) -> E:
         if meta.new_text: textual_mod.append(E.new(meta.new_text))
         active_mods_elem.append(textual_mod)
     return active_mods_elem
-
