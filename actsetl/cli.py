@@ -88,7 +88,7 @@ def parse_eisb(args):
     log.info("Writing output to %s", output_fn)
 
     akn_write(akn_act_root, output_fn, validate=not args.no_validate)
-    log.info("Successfully wrote output to %s", output_fn)
+    
 
 def main():
     """Main entry point for the script.

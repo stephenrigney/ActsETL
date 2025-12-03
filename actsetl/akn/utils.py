@@ -163,6 +163,7 @@ def akn_write(akn:etree, fn:str, validate:bool=True):
     logging.info("Writing XML")
 
     write_xml(xml, fn)
+    log.info("Successfully wrote output to %s", fn)
 
 def parsing_errors_writer(akn:etree):
     fn = "data/errors/parsing_errors.xml"
