@@ -7,19 +7,24 @@ returned from parse_section().
 """
 import io
 import logging
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 from lxml import etree
 from lxml.builder import E
 
 from actsetl.parsers.eisb_provisions import parse_section, parse_schedule
-from actsetl.parsers.common import XSLT_PATH
 
 log = logging.getLogger(__name__)
 
+RESOURCES_PATH = Path(__file__).parent.parent / 'resources'
+XSLT_PATH = RESOURCES_PATH / 'xslt' / 'eisb_transform.xslt'
 
 # Canonical ordering of structural tags (higher-level first)
-LEVELS = ("part", "chapter", "section", "subsection", "paragraph", "subparagraph", "clause", "subclause")
+LEVELS = (
+    "part", "chapter", "section", "subsection", 
+    "paragraph", "subparagraph", "clause", "subclause"
+    )
 
 # Inline content/container tags that should be appended into a parent's content
 INLINE_CONTAINER_TAGS = {"mod_block", "tblock", "table"}

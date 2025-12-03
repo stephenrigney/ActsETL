@@ -3,26 +3,47 @@ Parses provisions of an Act
 '''
 import logging
 from typing import List, Tuple
-
+from collections import namedtuple
+from dataclasses import dataclass
 from dateutil.parser import parse as dtparse
 
 from lxml import etree
 from lxml.builder import E
 
 
-from actsetl.parsers.common import (
-    ActMeta,
-    AmendmentMetadata,
-    Provision,
-    RegexPatternLibrary,
-    ODQ,
-    CDQ,
-    INSERTED_SECTION_THRESHOLD,
-    PARAGRAPH_MARGIN_THRESHOLD,
-    SUBPARAGRAPH_MARGIN_THRESHOLD,
-)
+from actsetl.parsers.patterns import RegexPatternLibrary
 
 log = logging.getLogger(__name__)
+
+ODQ, CDQ, OSQ, CSQ = "“", "”", '‘', '’'
+
+INSERTED_SECTION_THRESHOLD, PARAGRAPH_MARGIN_THRESHOLD, SUBPARAGRAPH_MARGIN_THRESHOLD = 8, 14, 17
+
+# --- Data Structures ---
+
+AmendmentMetadata = namedtuple("AmendmentMetadata", "type source_eId destination_uri position old_text new_text")
+
+ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
+
+@dataclass
+class Provision:
+    """
+    Intermediate representation for a provision derived from a raw eISB node.
+
+    Field names intentionally match the original namedtuple order used by
+    the existing AmendmentParser.process() so instances can be passed
+    straight into that API.
+    Fields: tag, eid, ins, hang, margin, align, xml, text, idx
+    """
+    tag: str
+    eid: Optional[str]
+    ins: bool
+    hang: int
+    margin: int
+    align: str
+    xml: Optional[etree._Element]
+    text: str
+    idx: int
 
 # Module-level regex patterns instance
 _regex_patterns = RegexPatternLibrary()
