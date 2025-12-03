@@ -4,7 +4,7 @@ Common data structures, constants, and classes for EISB parsers.
 import re
 from collections import namedtuple
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List, Tuple
 from pathlib import Path
 from lxml import etree
 
@@ -22,6 +22,25 @@ INSERTED_SECTION_THRESHOLD, PARAGRAPH_MARGIN_THRESHOLD, SUBPARAGRAPH_MARGIN_THRE
 AmendmentMetadata = namedtuple("AmendmentMetadata", "type source_eId destination_uri position old_text new_text")
 ActMeta = namedtuple("ActMeta", "number year date_enacted status short_title long_title")
 
+@dataclass
+class Provision:
+    """
+    Intermediate representation for a provision derived from a raw eISB node.
+
+    Field names intentionally match the original namedtuple order used by
+    the existing AmendmentParser.process() so instances can be passed
+    straight into that API.
+    Fields: tag, eid, ins, hang, margin, align, xml, text, idx
+    """
+    tag: str
+    eid: Optional[str]
+    ins: bool
+    hang: int
+    margin: int
+    align: str
+    xml: Optional[etree._Element]
+    text: str
+    idx: int
 
 @dataclass
 class ProvisionMetadata:
@@ -54,7 +73,7 @@ class RegexPatternLibrary:
             re.IGNORECASE
         )
         self.amendment_inline_substitution = re.compile(
-            r"by the substitution of (?P<new>["'"']["'"']?[^"'"']+'["'"']?) for (?P<old>["'"']["'"']?[^"'"']+'["'"'])"
+            r'''by the substitution of (?P<new>["'"']["'"']?[^"'"']+'["'"']?) for (?P<old>["'"']["'"']?[^"'"']+'["'"'])'''
         )
         
         # Destination URI pattern

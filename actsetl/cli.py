@@ -3,25 +3,24 @@ Command-line interface for ActsETL.
 """
 import sys
 from pathlib import Path
-if __name__ == "__main__" and __package__ is None:
-    project_root = Path(__file__).resolve().parent.parent
-    sys.path.insert(0, str(project_root))
 
 import logging
 import argparse
 import yaml
-from pathlib import Path
 
 from lxml import etree
 
-from actsetl.parsers.eisb import (
-    act_metadata, parse_body, parse_schedule, 
-    fix_headings, transform_xml, build_active_modifications
+from actsetl.parsers.eisb_structure import (
+    act_metadata, parse_body, transform_xml, build_active_modifications
 )
 from actsetl.akn.skeleton import akn_skeleton
 from actsetl.akn.utils import (
     akn_root, akn_notes, akn_write, pop_styles
 )
+
+if __name__ == "__main__" and __package__ is None:
+    project_root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(project_root))
 
 AKN_DATA_DIR = Path(__file__).parent.parent / "data" / "akn"
 
@@ -54,7 +53,6 @@ def parse_eisb(args):
     _, all_mod_info = parse_body(
         eisb_act.find("body"), akn_act.find("./body")
             )
-    parse_schedule(eisb_act, akn_act)
     fix_headings(akn_act)
 
     akn_act_root = akn_root(akn_act)
@@ -93,7 +91,7 @@ def parse_eisb(args):
 def main():
     """Main entry point for the script.
     
-    python -m actsetl.cli data/eisb/act_6_2025.eisb.xml data/akn/act_6_2025.akn.xml
+    python -m actsetl.cli data/eisb/act_6_2025.eixsd.assertValid(akn)sb.xml data/akn/act_6_2025.akn.xml
 
     """
     parser = argparse.ArgumentParser(description="Parse Irish Act XML into LegalDocML.")
