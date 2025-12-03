@@ -14,7 +14,9 @@ from dateutil.parser import parse as dtparse
 # sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from actsetl.parsers.eisb import (
-    act_metadata, parse_body, parse_p, ActMeta, RegexPatternLibrary, transform_xml, parse_ojref
+    act_metadata, parse_body, parse_p, ActMeta, 
+    RegexPatternLibrary, transform_xml, parse_ojref,
+    make_eid_snippet
 )
 from actsetl.akn.skeleton import akn_skeleton
 
@@ -206,54 +208,103 @@ def test_make_container():
     from actsetl.parsers.eisb import make_container
     
     tag = "subsection"
-    pnumber = "1"
-    attribs = {"eId": "sec1"}
+    number = "1"
+    heading = E.heading("Test heading")
+    attribs = {"eId": "sect_1"}
     
-    element = make_container(tag, pnumber, attribs)
+    element = make_container(tag, number, heading, attribs)
     
     assert element.tag == tag
-    assert element.get("eId") == "sec1"
-    
+    assert element.get("eId") == "sect_1"
+    assert element.find(".//heading").text == "Test heading"
+
+    element = make_container(tag, number, None, None)
+
+    assert element.find(".//heading") is None
+    assert element.get("eId") is None
+
     print("✅ make_container test passed!")
 
 def test_make_eid_snippet():
     """Test that make_eid_snippet function creates eId snippets correctly."""
-    from actsetl.parsers.eisb import make_eid_snippet
     
     tag = "section"
-    pnumber = "5"
+    pnumber = "5A"
     
     eid_snippet = make_eid_snippet(tag, pnumber)
     
-    assert eid_snippet == "section-5"
+    assert eid_snippet == "section_5A"
     
     print("✅ make_eid_snippet test passed!")
 
 def test_parse_table():
-    """Test that parse_table function works as expected."""
+    """
+    Tests the parse_table function using the inserted_table.eisb.xml file.
+    It checks if the table is correctly transformed into the LegalDocML format.
+    """
+    # Arrange: Load and parse the input XML file
+    eisb_xml_file = TEST_DATA_PATH / "eisb_input" / "inserted_table.eisb.xml"
+    with open(eisb_xml_file, "r", encoding="utf-8") as f:
+        eisb_xml_content = f.read()
+
+    # The transform_xml function handles character entities like <euro/>
+    # We parse the whole document and find the table, similar to how the main parser would
+    transformed_content = transform_xml(eisb_xml_content)
+    root = etree.fromstring(transformed_content)
+    table_element = root.find(".//body/sect/table")
+
+    # Act: Call the function under test
     from actsetl.parsers.eisb import parse_table
+    parsed_table = parse_table(table_element)
+
+    # Assert: Check various aspects of the transformation
     
-    # Sample table XML
-    table_xml = E.table(
-        E.tr(
-            E.td("Cell 1"),
-            E.td("Cell 2")
-        ),
-        E.tr(
-            E.td("Cell 3"),
-            E.td("Cell 4")
-        )
-    )
+    # 1. Check table attributes
+    assert parsed_table.attrib['width'] == '100'
+    assert 'text-indent:0' in parsed_table.attrib['style']
+    assert 'margin-left:0' in parsed_table.attrib['style']
+    assert 'text-align:left' in parsed_table.attrib['style']
+    assert 'colwidths:70,30' in parsed_table.attrib['style']
+    assert len(parsed_table.attrib) == 2 # Only 'width' and 'style' should remain
+
+    # 2. Check that <colgroup> is removed
+    assert parsed_table.find("colgroup") is None
+
+    # 3. Check header row (first <tr> should have <th> cells)
+    header_row = parsed_table.find("./tr[1]")
+    header_cells = header_row.findall("./th")
+    assert len(header_cells) == 2, "Header row should contain 2 <th> elements"
     
-    table_element = parse_table(table_xml)
-    
-    assert table_element.tag == "table"
-    rows = table_element.findall(".//tr")
-    assert len(rows) == 2
-    assert rows[0].findall(".//td")[0].text == "Cell 1"
-    assert rows[1].findall(".//td")[1].text == "Cell 4"
-    
-    print("✅ parse_table test passed!")
+    # Check styles and content of header cells
+    assert header_cells[0].attrib['style'] == 'width:70;vertical-align:top'
+    p_in_th1 = header_cells[0].find('p')
+    assert p_in_th1 is not None
+    assert 'Class of Insured Person' in p_in_th1.find('b').text
+
+    assert header_cells[1].attrib['style'] == 'width:30;vertical-align:top'
+    p_in_th2 = header_cells[1].find('p')
+    assert p_in_th2 is not None
+    assert 'Amount of premium to be paid from Fund' in p_in_th2.find('b').text
+
+    # 4. Check a data row (e.g., the second <tr> should have <td> cells)
+    data_row = parsed_table.find("./tr[2]")
+    data_cells = data_row.findall("./td")
+    assert len(data_cells) == 2, "Data row should contain 2 <td> elements"
+
+    # Check styles and content of data cells
+    assert data_cells[0].attrib['style'] == 'width:70;vertical-align:top'
+    p_in_td1 = data_cells[0].find('p')
+    assert p_in_td1 is not None
+    assert 'Male aged 70 years' in p_in_td1.text
+
+    assert data_cells[1].attrib['style'] == 'width:30;vertical-align:top'
+    p_in_td2 = data_cells[1].find('p')
+    assert p_in_td2 is not None
+    # The <euro/> tag is converted to '€' by transform_xml
+    assert '€350' in p_in_td2.text
+
+    # 5. Check total number of rows
+    assert len(parsed_table.findall("./tr")) == 9
 
 def test_parse_section():
     """Test that parse_section function works as expected."""
