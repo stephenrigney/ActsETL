@@ -501,7 +501,15 @@ def make_container(tag: str, num:E.b=None, heading:etree.Element=None, attribs:d
         container.append(E.num(num))
     return container
 
-def make_eid_snippet(label: str, num:str):
+def _is_valid_eid_char(char: str) -> bool:
+    """Check if character is valid for eId according to AKN-NC v1.0.
+    
+    Valid characters are: ASCII alphanumeric (a-z, 0-9), hyphen (-), underscore (_).
+    """
+    return char.isascii() and (char.isalnum() or char in '-_')
+
+
+def make_eid_snippet(label: str, num: str) -> str:
     """
     Generate partial eId.
     
@@ -514,7 +522,8 @@ def make_eid_snippet(label: str, num:str):
     - https://docs.oasis-open.org/legaldocml/akn-nc/v1.0/akn-nc-v1.0.html
     - akomantoso30.xsd (noWhiteSpace type allows any non-whitespace, but AKN-NC restricts this)
     """
-    return f"{label}_{''.join(d.lower() for d in num if d.isascii() and (d.isalnum() or d in '-_'))}"
+    filtered_num = ''.join(d.lower() for d in num if _is_valid_eid_char(d))
+    return f"{label}_{filtered_num}"
 
 def parse_table(table: etree):
     """
