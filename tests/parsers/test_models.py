@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from actsetl.parsers.patterns import RegexPatternLibrary
+from actsetl.parsers.eisb_provisions import make_eid_snippet
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -108,3 +109,69 @@ def test_regex_library():
     print("✓ OJ reference pattern works")
     
     print("\n✅ All tests passed!")
+
+
+class TestMakeEidSnippet:
+    """Tests for the make_eid_snippet function.
+    
+    According to AKN-NC v1.0 (OASIS Akoma Ntoso Naming Convention), eId values
+    must only contain ASCII lowercase letters (a-z), decimal digits (0-9),
+    underscore (_), and hyphen (-).
+    
+    Reference: https://docs.oasis-open.org/legaldocml/akn-nc/v1.0/akn-nc-v1.0.html
+    """
+    
+    def test_make_eid_snippet_ascii_digits(self):
+        """Test eId with ASCII digits."""
+        result = make_eid_snippet('sect', '123')
+        assert result == 'sect_123'
+    
+    def test_make_eid_snippet_uppercase_to_lowercase(self):
+        """Test that uppercase ASCII letters are converted to lowercase."""
+        result = make_eid_snippet('sect', 'ABC')
+        assert result == 'sect_abc'
+    
+    def test_make_eid_snippet_mixed_case(self):
+        """Test with mixed case letters and digits."""
+        result = make_eid_snippet('sect', 'AbC123')
+        assert result == 'sect_abc123'
+    
+    def test_make_eid_snippet_filters_irish_fada(self):
+        """Test that Irish fada characters are filtered out per AKN-NC v1.0.
+        
+        The AKN-NC v1.0 specification requires only ASCII characters in eId values.
+        Irish fada characters (á, é, í, ó, ú) are Unicode and must be filtered out.
+        """
+        result = make_eid_snippet('sect', 'áéíóú')
+        assert result == 'sect_'
+    
+    def test_make_eid_snippet_mixed_ascii_and_unicode(self):
+        """Test with a mix of ASCII and non-ASCII characters."""
+        result = make_eid_snippet('sect', 'Sé1An')
+        assert result == 'sect_s1an'
+    
+    def test_make_eid_snippet_filters_parentheses(self):
+        """Test that parentheses and other special characters are filtered."""
+        result = make_eid_snippet('subsect', '(1A)')
+        assert result == 'subsect_1a'
+    
+    def test_make_eid_snippet_uppercase_fada_characters(self):
+        """Test that uppercase fada characters (Á, É, Í, Ó, Ú) are filtered out."""
+        result = make_eid_snippet('sect', 'ÁÉÍÓÚ')
+        assert result == 'sect_'
+    
+    def test_make_eid_snippet_preserves_label(self):
+        """Test that the label prefix is preserved correctly."""
+        result = make_eid_snippet('subsection', '5')
+        assert result.startswith('subsection_')
+        assert result == 'subsection_5'
+    
+    def test_make_eid_snippet_euro_symbol(self):
+        """Test that euro symbol (€) is filtered out."""
+        result = make_eid_snippet('sect', '€100')
+        assert result == 'sect_100'
+    
+    def test_make_eid_snippet_hyphen(self):
+        """Test that hyphen is filtered out (not alphanumeric)."""
+        result = make_eid_snippet('sect', '1-2')
+        assert result == 'sect_12'
