@@ -6,6 +6,7 @@ from typing import List, Tuple
 from collections import namedtuple
 from dataclasses import dataclass
 from dateutil.parser import parse as dtparse
+from typing import List, Optional, Tuple
 
 from lxml import etree
 from lxml.builder import E
