@@ -504,7 +504,11 @@ def make_container(tag: str, num:E.b=None, heading:etree.Element=None, attribs:d
 def _is_valid_eid_char(char: str) -> bool:
     """Check if character is valid for eId according to AKN-NC v1.0.
     
-    Valid characters are: ASCII alphanumeric (a-z, 0-9), hyphen (-), underscore (_).
+    Valid characters are:
+    - ASCII letters: a-z, A-Z (converted to lowercase by caller)
+    - ASCII digits: 0-9
+    - Hyphen: -
+    - Underscore: _
     """
     return char.isascii() and (char.isalnum() or char in '-_')
 
