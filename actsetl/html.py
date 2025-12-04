@@ -9,7 +9,7 @@ from lxml import etree
 
 log = logging.getLogger(__name__)
 
-def akn_2_html(xml_in: str, xslt_transform:str) -> str:
+def akn_2_html(xml_in: str, xslt_transform: str) -> str:
     """
     Transform LegalDocML XML into HTML.
     

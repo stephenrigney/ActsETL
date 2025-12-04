@@ -18,7 +18,7 @@ AKN_NS = "http://docs.oasis-open.org/legaldocml/ns/akn/3.0"
 
 RESOURCES_PATH = Path(__file__).parent.parent / 'resources'
 
-def eli_uri_fragment(meta: etree, lang:str="en") -> namedtuple:
+def eli_uri_fragment(meta: etree._Element, lang: str = "en") -> namedtuple:
     """
     Composes FRBR URI snippets from eISB act metadata and returns as named tuple
 
@@ -40,7 +40,7 @@ def eli_uri_fragment(meta: etree, lang:str="en") -> namedtuple:
     mani_uri = f"{exp_uri}/akn"
     return FRBR(work=work_uri, exp=exp_uri, mani=mani_uri)
 
-def akn_root(act: etree) -> etree:
+def akn_root(act: etree._Element) -> etree._Element:
     """
     Generate base LegalDocML element.
     

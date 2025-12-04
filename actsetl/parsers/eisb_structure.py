@@ -132,7 +132,7 @@ def section_hierarchy(subdivs: List[object]) -> Optional[etree._Element]:
     return root
 
 
-def fix_headings(act):
+def fix_headings(act: etree._Element) -> etree._Element:
     """
     Identify and correctly tag headings in inserted text.
     """
@@ -192,7 +192,7 @@ def parse_body(eisb_parent: etree._Element, akn_parent: etree._Element) -> Tuple
     return akn_parent, all_mod_info
 
 
-def generate_toc(act: etree) -> E:
+def generate_toc(act: etree._Element) -> E:
     """
     Generate the TOC for the Act.
     """

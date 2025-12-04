@@ -14,7 +14,7 @@ from .utils import eli_uri_fragment, date_suffix
 log = logging.getLogger(__name__)
 
 
-def akn_skeleton(act_meta: etree) -> E:
+def akn_skeleton(act_meta: etree._Element) -> E:
     """
     Inserts Act metadata (LegalDocML meta element) and skeleton body for LegalDocML XML).
     

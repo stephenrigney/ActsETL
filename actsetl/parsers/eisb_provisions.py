@@ -202,7 +202,7 @@ def _get_text_layout(node: etree._Element) -> Tuple[int, int, str]:
     # defaults
     return 0, 0, "left"
 
-def _identify_provision(node: etree._Element, patterns: RegexPatternLibrary, is_huw_flag: bool):
+def _identify_provision(node: etree._Element, patterns: RegexPatternLibrary, is_huw_flag: bool) -> Optional[Provision]:
     """
     Identify structural metadata for a <p> node:
     - whether it's a subsection/paragraph/clause/subclause,
