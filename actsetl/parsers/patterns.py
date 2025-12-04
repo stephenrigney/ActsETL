@@ -40,10 +40,11 @@ class RegexPatternLibrary:
         
         # Provision identification patterns (use optional curly quote, capture the whole marker)
         # Curly quotes are Unicode  \u201c (left) and \u201d (right)
-        self.subsection_pattern = re.compile(r"^\s?([\u201c\u201d]?\(\d+[A-Z]*\))")
-        self.paragraph_pattern = re.compile(r"^\s?([\u201c\u201d]?\([a-z]+\))")
-        self.clause_pattern = re.compile(r"^\s?([\u201c\u201d]?\([IVX]+\))")
-        self.subclause_pattern = re.compile(r"^\s?([\u201c\u201d]?\([A-Z]+\))")
+        self.subsection_pattern = re.compile(r"^\s?(“?\(\d+[A-Z]*\))")
+        self.paragraph_pattern = re.compile(r"^\s?(“?\([a-z]+\))")
+        self.subparagraph_pattern = re.compile(r"^\s?(“?\([ivx]+[a-z]*\))")
+        self.clause_pattern = re.compile(r"^\s?(“?\([IVX]+\))")
+        self.subclause_pattern = re.compile(r"^\s?(“?\([A-Z]+\))")
     
     def match_amendment_instruction(self, text: str):
         """
