@@ -19,7 +19,8 @@ from actsetl.parsers.eisb_structure import (
     LEVELS,
     INLINE_CONTAINER_TAGS,
 )
-from actsetl.parsers.common import AmendmentMetadata, Provision
+
+from actsetl.parsers.eisb_provisions import AmendmentMetadata, Provision
 
 
 # Define the path to the test data directory
@@ -74,10 +75,12 @@ class TestTransformXml:
 
     def test_transform_xml_with_quotes(self):
         """Test that curly quotes are properly converted."""
-        input_xml = '''<?xml version="1.0"?>
-<root>
-    <p><odq/>Hello World<cdq/></p>
-</root>'''
+        input_xml = '''
+        <?xml version="1.0"?>
+        <root>
+            <p><odq/>Hello World<cdq/></p>
+        </root>
+        '''
         
         transformed = transform_xml(input_xml)
         result = etree.fromstring(transformed.encode())
@@ -90,10 +93,10 @@ class TestTransformXml:
     def test_transform_xml_irish_characters(self):
         """Test transformation of Irish fada characters."""
         input_xml = '''<?xml version="1.0"?>
-<root>
-    <p><afada/><efada/><ifada/><ofada/><ufada/></p>
-    <p><Afada/><Efada/><Ifada/><Ofada/><Ufada/></p>
-</root>'''
+        <root>
+            <p><afada/><efada/><ifada/><ofada/><ufada/></p>
+            <p><Afada/><Efada/><Ifada/><Ofada/><Ufada/></p>
+        </root>'''
         
         transformed = transform_xml(input_xml)
         result = etree.fromstring(transformed.encode())
@@ -362,10 +365,10 @@ class TestParseBody:
         
         result, mod_info = parse_body(eisb_body, akn_body)
         
-        # Should have parsed at least one section
+        # Should have parsed one section
         sections = result.findall(".//section")
         # The part contains one sect which should produce a section
-        assert len(sections) >= 0  # At least handled without error
+        assert len(sections) == 1  # At least handled without error
 
     def test_parse_body_with_simple_section(self):
         """Test parse_body with citation_and_commencement_section."""
