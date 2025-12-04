@@ -175,3 +175,8 @@ class TestMakeEidSnippet:
         """Test that hyphen is preserved as per AKN-NC v1.0 specification."""
         result = make_eid_snippet('sect', '1-2')
         assert result == 'sect_1-2'
+    
+    def test_make_eid_snippet_underscore(self):
+        """Test that underscore is preserved as per AKN-NC v1.0 specification."""
+        result = make_eid_snippet('sect', '1_a')
+        assert result == 'sect_1_a'
