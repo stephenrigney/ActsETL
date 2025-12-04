@@ -172,6 +172,6 @@ class TestMakeEidSnippet:
         assert result == 'sect_100'
     
     def test_make_eid_snippet_hyphen(self):
-        """Test that hyphen is filtered out (not alphanumeric)."""
+        """Test that hyphen is preserved as per AKN-NC v1.0 specification."""
         result = make_eid_snippet('sect', '1-2')
-        assert result == 'sect_12'
+        assert result == 'sect_1-2'

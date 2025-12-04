@@ -508,13 +508,13 @@ def make_eid_snippet(label: str, num:str):
     According to AKN-NC v1.0 (OASIS Akoma Ntoso Naming Convention), the eId
     attribute may only contain ASCII lowercase letters (a-z), decimal digits (0-9),
     underscore (_), and hyphen (-). This function filters the input to only include
-    ASCII alphanumeric characters and converts to lowercase for compliance.
+    these characters and converts to lowercase for compliance.
     
     References:
     - https://docs.oasis-open.org/legaldocml/akn-nc/v1.0/akn-nc-v1.0.html
     - akomantoso30.xsd (noWhiteSpace type allows any non-whitespace, but AKN-NC restricts this)
     """
-    return f"{label}_{''.join(d.lower() for d in num if d.isascii() and d.isalnum())}"
+    return f"{label}_{''.join(d.lower() for d in num if d.isascii() and (d.isalnum() or d == '-'))}"
 
 def parse_table(table: etree):
     """
