@@ -235,7 +235,8 @@ def _identify_provision(node: etree._Element, patterns: RegexPatternLibrary, is_
         # Caller will supply hanging/margin values to decide threshold; we signal inserted here,
         # actual "inserted" decision is made by the caller based on hanging+margin threshold.
         meta["pnumber"] = (b.text or "").strip()
-        # set a temporary eid; caller may reassign based on exact tag chosen
+        meta['tag'] = "section"
+         # set a temporary eid; caller may reassign based on exact tag chosen
         meta["eid"] = make_eid_snippet("sect", meta["pnumber"])
 
     # Provision type matching (subsection / paragraph / clause / subclause)
@@ -298,7 +299,7 @@ def extract_raw_provisions(sect: etree._Element, patterns: RegexPatternLibrary) 
         meta = _identify_provision(node, patterns, is_huw)
 
         # If bold marker found earlier, and heuristic indicates inserted section, mark as such
-        if meta.get("pnumber") and (hang + margin) > INSERTED_SECTION_THRESHOLD:
+        if meta['tag'] == "section" and (hang + margin) > INSERTED_SECTION_THRESHOLD:
             meta_tag = "section"
             meta_ins = True
             meta_eid = make_eid_snippet("sect", meta["pnumber"])
@@ -484,7 +485,7 @@ def parse_p(p: etree) -> etree:
 def make_container(tag: str, num:E.b=None, heading:etree.Element=None, attribs:dict=None) -> E:
     """
     Generate a LegalDocML element with <tag> name and optional num/heading elements.
-    """
+'    """
     if not attribs: attribs = {}
     # Build a safe attributes dict (coerce keys to strings, skip None keys)
     safe_attribs = {}
