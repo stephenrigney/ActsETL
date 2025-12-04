@@ -13,7 +13,7 @@ from typing import List, Optional, Tuple
 from lxml import etree
 from lxml.builder import E
 
-from actsetl.parsers.eisb_provisions import parse_section, parse_schedule
+from actsetl.parsers.eisb_provisions import parse_section, parse_schedule, parse_toplevel_elem
 
 log = logging.getLogger(__name__)
 
