@@ -501,11 +501,33 @@ def make_container(tag: str, num:E.b=None, heading:etree.Element=None, attribs:d
         container.append(E.num(num))
     return container
 
-def make_eid_snippet(label: str, num:str):
+def _is_valid_eid_char(char: str) -> bool:
+    """Check if character is valid for eId according to AKN-NC v1.0.
+    
+    Valid characters are:
+    - ASCII letters: a-z, A-Z (converted to lowercase by caller)
+    - ASCII digits: 0-9
+    - Hyphen: -
+    - Underscore: _
+    """
+    return char.isascii() and (char.isalnum() or char in '-_')
+
+
+def make_eid_snippet(label: str, num: str) -> str:
     """
     Generate partial eId.
+    
+    According to AKN-NC v1.0 (OASIS Akoma Ntoso Naming Convention), the eId
+    attribute may only contain ASCII lowercase letters (a-z), decimal digits (0-9),
+    underscore (_), and hyphen (-). This function filters the input to only include
+    these characters and converts to lowercase for compliance.
+    
+    References:
+    - https://docs.oasis-open.org/legaldocml/akn-nc/v1.0/akn-nc-v1.0.html
+    - akomantoso30.xsd (noWhiteSpace type allows any non-whitespace, but AKN-NC restricts this)
     """
-    return f"{label}_{''.join(d for d in num if d.isalnum())}"
+    filtered_num = ''.join(d.lower() for d in num if _is_valid_eid_char(d))
+    return f"{label}_{filtered_num}"
 
 def parse_table(table: etree):
     """
