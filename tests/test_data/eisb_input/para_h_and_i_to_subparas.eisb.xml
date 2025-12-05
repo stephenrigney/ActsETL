@@ -98,19 +98,24 @@
             <p class="-3 14 0 left 1 0">(g) the application of this Part where an employer is
                 treated by a provision of the Taxes Consolidation Act 1997 as making a payment of
                 emoluments of an amount different from the amount actually paid;</p>
+            <!-- this is a paragraph (h) child of subsection (1) -->
             <p class="-3 14 0 left 1 0">(h) the operation of this Part in circumstances where<emdash /></p>
+            <!-- this is a subparagraph (i) child of paragraph (h) -->
             <p class="-3 17 0 left 1 0">(i) an employee receives emoluments in respect of employment
                 in a trade, business, concern or undertaking, or in connection with property, or
                 receives an annuity or pension, and</p>
             <p class="-3 17 0 left 1 0">(ii) there is a change in the employer from whom the
                 employee receives the emoluments or annuity or pension;</p>
+            <!-- this is a paragraph (i) child of subsection (1) -->
             <p class="-3 14 0 left 1 0">(i) the deduction and payment of contributions under this
                 Part where emoluments in respect of an employment are paid after the end of the
                 employment<emdash /></p>
+            <!-- this is a subparagraph (i) child of paragraph (i) -->
             <p class="-3 17 0 left 1 0">(i) the electronic system put in place by the Authority for
                 the efficient operation of this Part is not functioning or is not functioning
                 properly at any particular time such that a person is unable to comply with an
                 obligation under this Part, or</p>
+            <!-- This is a subparagraph (ii) child of paragraph (i) -->
             <p class="-3 17 0 left 1 0">(ii) a person is unable to use that electronic system at any
                 particular time because of a general or partial systems failure of an internet
                 service provider or of an electricity service provider, occurring in the general

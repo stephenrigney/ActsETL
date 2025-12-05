@@ -74,7 +74,10 @@
                     <b>Definitions</b>
                 </p>
             </title>
+            <!-- The scope of the definitions in this section <b>2.</b> is the Act -->
+            <!-- This is a section (2) followed by multiple paragraphs -->
             <p class="-3 11 0 left 1 0"><b>2.</b> In this Act<emdash /></p>
+            <!-- These are the definitions of terms used within the scope set out in the section (the Act) -->
             <p class="0 11 0 left 1 0"><odq />AE provider scheme<cdq /> shall be construed in
                 accordance with <i>section 69(2)</i>;</p>
             <p class="0 11 0 left 1 0"><odq />Authority<cdq /> has the meaning given by <i>section 8</i>
@@ -98,6 +101,7 @@
             <p class="0 11 0 left 1 0"><odq />enrolment date<cdq />, in relation to a person, means
                 the date assigned as that person<csq />s enrolment date under <i>section 50(1)</i>
                 or <i>section 53(1)</i>;</p>
+            <!-- This is a definitionTerm containing a blocklist -->
             <p class="0 11 0 left 1 0"><odq />European Union act<cdq /> means<emdash /></p>
             <p class="-3 14 0 left 1 0">(a) a provision of the treaties governing the European
                 Union, or</p>

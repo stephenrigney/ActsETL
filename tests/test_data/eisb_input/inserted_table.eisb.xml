@@ -74,12 +74,17 @@
                     <b>Amendment of Schedule 4 to Act of 1994</b>
                 </p>
             </title>
+            <!-- This section amends Schedule 4 to the Act of 1994 by substituting a new Table 2 -->
             <p class="-3 11 0 left 1 0"><b>9.</b> Schedule 4 to the Act of 1994 is amended by the
                 substitution of the following Table for Table 2:</p>
+            <!-- quotedStructure-->
+             <!-- table indentifier (<num>) -->
             <p class="0 0 0 center 1 0"><odq />Table 2</p>
+            <!-- table header -->
             <p class="0 0 0 center 1 0">
                 <i>AMOUNTS APPLICABLE ON OR AFTER 1 APRIL 2025</i>
             </p>
+            <!-- table structure -->
             <table width="100%" class="0 0 0 left 0 0" xmlns:x="http://www.w3.org/TR/REC-html40">
                 <colgroup>
                     <col width="70%" />

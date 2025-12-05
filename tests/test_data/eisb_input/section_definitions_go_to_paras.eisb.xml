@@ -80,8 +80,12 @@
                 meaning of the Directive of 2016), and</p>
             <p class="-3 14 0 left 1 0">(b) without prejudice to the generality of <i>paragraph (a)</i>,
                 in accordance with this section.</p>
+            <!-- The scope of the definitions in this subsection (2) of section <b>74.</b> is section 74. -->
             <p class="-3 11 0 left 1 0">(2) In this section<emdash /></p>
+            <!-- definitions start-->
+             <!-- definitionTerm of collective investment undertaking -->
             <p class="0 11 0 left 1 0"><odq />collective investment undertaking<cdq /> means<emdash /></p>
+            <!-- blockList-->
             <p class="-3 14 0 left 1 0">(a) an investment undertaking within the meaning given by
                 section 739B of the Taxes Consolidation Act 1997,</p>
             <p class="-3 14 0 left 1 0">(b) a unit trust which neither is, nor is deemed to be, an
@@ -89,6 +93,7 @@
             <p class="-3 14 0 left 1 0">(c) an undertaking for collective investment in transferable
                 securities within the meaning given by Directive 2009/65/EC of the European
                 Parliament and of the Council of 13 July 2009<fn>
+                    <!-- OJEU citation-->
                     <marker>
                         <su>2</su>
                     </marker>
@@ -103,6 +108,7 @@
                 739I(1)(a)(i) of the Taxes Consolidation Act 1997, or</p>
             <p class="-3 14 0 left 1 0">(e) an alternative investment fund within the meaning given
                 by Directive 2011/61/EU of the European Parliament and of the Council of 8 June 2011<fn>
+                    <!-- OJEU citation-->
                     <marker>
                         <su>3</su>
                     </marker>
@@ -113,8 +119,10 @@
                 on Alternative Investment Fund Managers and amending Directives 2003/41/EC and
                 2009/65/EC and Regulations (EC) No. 1060/2009 and (EU) No. 1095/2010, situated in
                 any Member State;</p>
+            <!-- definitionTerm of Directive of 2016 -->
             <p class="0 11 0 left 1 0"><odq />Directive of 2016<cdq /> means Directive (EU)
                 2016/2341 of the European Parliament and of the Council of 14 December 2016<fn>
+                    <!-- OJEU citation -->
                     <marker>
                         <su>4</su>
                     </marker>
@@ -124,16 +132,20 @@
                 </fn>
                 on the activities and supervision of institutions for occupational retirement
                 provision (IORPs) (recast);</p>
+            <!-- definitionTerm of insurance policy -->
             <p class="0 11 0 left 1 0"><odq />insurance policy<cdq /> means an insurance policy or
                 contract of assurance issued by any person who is the holder of an authorisation<emdash /></p>
+            <!-- blockList -->
             <p class="-3 14 0 left 1 0">(a) granted by the Central Bank of Ireland under the
                 European Union (Insurance and Reinsurance) Regulations 2015 (S.I. No. 485 of 2015),
                 or</p>
             <p class="-3 14 0 left 1 0">(b) granted by the authority charged with the duty of
                 supervising the activities of insurance undertakings in a Member State other than
                 the State in accordance with the Solvency II Directive;</p>
+            <!-- definitionTerm of Solvency II Directive -->
             <p class="0 11 0 left 1 0"><odq />Solvency II Directive<cdq /> means Directive
                 2009/138/EC of the European Parliament and of the Council of 25 November 2009<fn>
+                    <!-- OJEU citation -->
                     <marker>
                         <su>5</su>
                     </marker>
@@ -143,6 +155,7 @@
                 </fn>
                 on the taking-up and pursuit of the business of Insurance and Reinsurance (Solvency
                 II) (recast).</p>
+            <!-- definitions end -->
             <p class="-3 11 0 left 1 0">(3) Subject to <i>subsection (5)</i>, a word or expression
                 used in this section or <i>section 75</i> and in subsection (2), (3) or (5) of
                 section 59AB of the Pensions Act 1990 has, unless the context otherwise requires,

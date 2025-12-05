@@ -74,44 +74,61 @@
                     <b>Amendment of Act of 2015</b>
                 </p>
             </title>
+            <!-- mod content starts here -->
             <p class="-3 11 0 left 1 0"><b>130.</b> The Act of 2015 is amended<emdash /></p>
+            <!-- amending a definitionTerm in definition in section 2 of the Act of 2015 -->
             <p class="-3 14 0 left 1 0">(a) in section 2, in the definition of <odq />official body<cdq /><emdash /></p>
+            <!-- "Paragraph (n) is a blocklist item in a definitionTerm" -->
             <p class="-3 17 0 left 1 0">(i) in paragraph (n), by the substitution of <odq />
                 Authority,<cdq /> for <odq />Authority, or<cdq />, and</p>
             <p class="-3 17 0 left 1 0">(ii) by the insertion of the following paragraph after
                 paragraph (n):</p>
+            <!-- inserting new blocklist item (nn) -->
             <p class="0 11 0 left 1 0"><odq />(na) <i>An t<Ufada />dar<afada />s N<afada />isi<ufada />nta
                 um Uathroll<ufada /> Coigiltis Scoir</i>, or<cdq />,</p>
+            <!-- amending section 41(7) of the Act of 2015 -->
             <p class="-3 14 0 left 1 0">(b) in section 41(7)<emdash /></p>
+            <!-- substituting text in paragraph (i) of section 41(7)-->
             <p class="-3 17 0 left 1 0">(i) by the substitution in paragraph (i) of <odq />dispute,
                 and<cdq /> for <odq />dispute.<cdq />, and</p>
+            <!-- inserting new paragraph (ga) after section 41(7)(g) -->
             <p class="-3 17 0 left 1 0">(ii) by the insertion of the following paragraph after
                 paragraph (g):</p>
+            <!-- quotedStructure for inserted paragraph (ga) -->
             <p class="-3 23 0 left 1 0"><odq />(ga) in the case of a dispute relating to <i>sections
                 127</i> and <i>128</i> of the <i>Automatic Enrolment Retirement Savings Act 2024</i>,
                 it has been referred to the Director General after the expiration of the period of 6
                 months beginning on the day immediately following the date of the occurrence of the
                 dispute,<cdq />,</p>
+            <!-- inserting new scheduleParagraph in Schedule 1 of the Act of 2015 after existing paragraph 20 -->
             <p class="-3 14 0 left 1 0">(c) in Schedule 1, by the insertion in Part 2 of the
                 following paragraph after paragraph 20 (inserted by section 35 of the Protected
                 Disclosures (Amendment) Act 2022):</p>
+            <!-- quotedStructure for inserted scheduleParagraph 21 -->
             <p class="-3 20 0 left 1 0"><odq />21. <i>Sections 127</i> and <i>128</i> of the <i>Automatic
                 Enrolment Retirement Savings System Act 2024</i><cdq />,</p>
+            <!-- inserting new scheduleParagraph in Part 1 of Schedule 5 of the Act of 2015  after existing paragraph 30 -->
             <p class="-3 14 0 left 1 0">(d) in Schedule 5, by the insertion in Part 1 of the
                 following paragraph after paragraph 30:</p>
+            <!-- quotedStructure for inserted scheduleParagraph 31 -->
             <p class="-3 20 0 left 1 0"><odq />31. <i>Sections 127</i> and <i>128</i> of the <i>Automatic
                 Enrolment Retirement Savings System Act 2024</i><cdq />,</p>
             <p class="0 14 0 left 1 0">and</p>
+            <!-- Amendments to Schedule 6 of the Act of 2015 -->
             <p class="-3 14 0 left 1 0">(e) in Schedule 6<emdash /></p>
+            <!-- inserting new scheduleParagraph in Part 1 of Schedule 6 after existing paragraph 40 -->
             <p class="-3 17 0 left 1 0">(i) by the insertion in Part 1 of the following paragraph
                 after paragraph 40 (inserted by section 40(e) of the Work Life Balance and
                 Miscellaneous Provisions Act 2023):</p>
+            <!-- quotedStructure for inserted scheduleParagraph 41 -->
             <p class="-3 20 0 left 1 0"><odq />41. <i>Section 129</i> of the <i>Automatic Enrolment
                 Retirement Savings System Act 2024</i><cdq />,</p>
             <p class="0 17 0 left 1 0">and</p>
+            <!-- inserting new scheduleParagraph in Part 2 of Schedule 6 after existing paragraph 40 -->
             <p class="-3 17 0 left 1 0">(ii) by the insertion in Part 2 of the following paragraph
                 after paragraph 40 (inserted by section 40(e) of the Work Life Balance and
                 Miscellaneous Provisions Act 2023):</p>
+            <!-- quotedStructure for inserted scheduleParagraph 41 -->
             <p class="-3 20 0 left 1 0"><odq />41. <i>Section 129</i> of the <i>Automatic Enrolment
                 Retirement Savings System Act 2024</i><cdq />.</p>
         </sect>

@@ -1,0 +1,148 @@
+<akomaNtoso xmlns="http://docs.oasis-open.org/legaldocml/ns/akn/3.0">
+  <act name="act">
+    <meta>
+      <identification source="#source">
+        <FRBRWork>
+          <FRBRthis value="/akn/ie/act/2025/undefined"/>
+          <FRBRuri value="/akn/ie/act/2025/undefined"/>
+          <FRBRdate date="2025-01-01" name="generation"/>
+          <FRBRauthor href="#source"/>
+          <FRBRcountry value="ie"/>
+          <FRBRnumber value="71A"/>
+          <FRBRname value="Definitions"/>
+        </FRBRWork>
+        <FRBRExpression>
+          <FRBRthis value="/akn/ie/act/2025/undefined/eng@/expr"/>
+          <FRBRuri value="/akn/ie/act/2025/undefined/eng@/expr"/>
+          <FRBRdate date="2025-01-01" name="generation"/>
+          <FRBRauthor href="#source"/>
+          <FRBRlanguage language="eng"/>
+        </FRBRExpression>
+        <FRBRManifestation>
+          <FRBRthis value="/akn/ie/act/2025/undefined/eng@/expr.xml"/>
+          <FRBRuri value="/akn/ie/act/2025/undefined/eng@/expr.xml"/>
+          <FRBRdate date="2025-01-01" name="generation"/>
+          <FRBRauthor href="#source"/>
+        </FRBRManifestation>
+      </identification>
+    </meta>
+    <body>
+      <section eId="sect_71A">
+        <heading>
+          <b>Definitions</b>
+        </heading>
+        <num>
+          <b>71A.</b>
+        </num>
+        <subsection eId="sect_71A__subsect_1">
+          <num>(1)</num>
+          <intro>
+            <p>In <ref href="#part_12A">this Part</ref>—</p>
+          </intro>
+          <hcontainer name="definitions" eId="sect_71A__subsect_1__definitions">
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__act_of_1967">
+              <content>
+                <p>‘<def refersTo="#term-act_of_1967">Act of 1967</def>’ means the <ref refersTo="#act" href="https://www.irishstatutebook.ie/eli/1967/act/21/enacted/en">Redundancy Payments Act 1967</ref>;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__appeal">
+              <content>
+                <p>‘<def refersTo="#term-appeal">appeal</def>’ means an appeal under <ref href="#sect_71J_subsect_1">section 71J(1)</ref>;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__application">
+              <content>
+                <p>‘<def refersTo="#term-application">application</def>’ means, except in <ref href="#sect_71C">section 71C</ref>, an application under <ref href="#sect_71D_subsect_1">section 71D(1)</ref> made, in accordance with <ref href="#part_12A">this Part</ref> and the regulations, by a licensee;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__determination">
+              <content>
+                <p>‘<def refersTo="#term-determination">determination</def>’ means, in relation to an application, a determination made by an assessor under <ref href="#sect_71F_subsect_2_para_b">section 71F(2)(b)</ref> in respect of that application;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__dispose">
+              <content>
+                <p>‘<def refersTo="#term-dispose">dispose</def>’, in relation to a specified animal, includes killing the animal in such manner as to inflict as little suffering as possible in the circumstances or causing the animal to be so-killed;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__fur_or_skin_farming">
+              <content>
+                <p>‘<def refersTo="#term-fur_or_skin_farming">fur or skin farming</def>’ means the breeding, rearing or keeping of a specified animal solely or primarily for the value of, or the manufacture of products from, its fur or skin;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__income_losses">
+              <content>
+                <p>‘<def refersTo="#term-income_losses">income losses</def>’ means losses of income;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__licensee">
+              <content>
+                <p>‘<def refersTo="#term-licensee">licensee</def>’ means a person who immediately before the commencement of <ref href="#part_12A">this Part</ref> held a licence granted under the <ref href="https://www.irishstatutebook.ie/eli/1933/act/16/enacted/en" refersTo="#act">Musk Rats Act 1933</ref>;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__non_income_losses">
+              <content>
+                <p>‘<def refersTo="#term-non_income_losses">non-income losses</def>’ means losses other than income losses;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__redundant_worker">
+              <content>
+                <p>‘<def refersTo="#term-redundant_worker">redundant worker</def>’ means an employee (within the meaning of the Act of 1967) of a licensee who was dismissed, during the period commencing 6 months before, and ending 6 months after, the date of commencement of <ref href="#part_12A">this Part</ref>;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__regulations">
+              <content>
+                <p>‘<def refersTo="#term-regulations">regulations</def>’ means regulations made under <ref href="#sect_71D">section 71D</ref>;</p>
+              </content>
+            </hcontainer>
+            <hcontainer name="definitionTerm" eId="sect_71A__subsect_1__def__specified_animal">
+              <content>
+                <p>‘<def refersTo="#term-specified_animal">specified animal</def>’ means—</p>
+                <blockList eId="sect_71A__subsect_1__def__specified_animal__list">
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_a">
+                    <num>(a)</num>
+                    <p>a dog, fox, jackal, wolf and all other members of the <i>Canidae</i> family,</p>
+                  </item>
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_b">
+                    <num>(b)</num>
+                    <p>a domestic cat, wild feline and all other members of the <i>Felidae</i> family,</p>
+                  </item>
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_c">
+                    <num>(c)</num>
+                    <p>a hare, rabbit and all other members of the <i>Leporidae</i> family,</p>
+                  </item>
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_d">
+                    <num>(d)</num>
+                    <p>a mink, weasel, stoat and all other <i>Rodentia</i>,</p>
+                  </item>
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_e">
+                    <num>(e)</num>
+                    <p>a raccoon, olingo and all other members of the <i>Procyonidae</i> family,</p>
+                  </item>
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_f">
+                    <num>(f)</num>
+                    <p>a civet and all other members of the <i>Viverridae</i> family,</p>
+                  </item>
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_g">
+                    <num>(g)</num>
+                    <p>a reptile, and</p>
+                  </item>
+                  <item eId="sect_71A__subsect_1__def__specified_animal__para_h">
+                    <num>(h)</num>
+                    <p>any other animal or class of animal designated in an order made by the Minister under <ref href="#sect_71A__subsect_2">subsection (2)</ref>.</p>
+                  </item>
+                </blockList>
+              </content>
+            </hcontainer>
+          </hcontainer>
+        </subsection>
+        <subsection eId="sect_71A__subsect_2">
+          <num>(2)</num>
+          <content>
+            <p>The Minister may, by order, designate an animal or class of animal as a specified animal for the purpose of <ref href="#">paragraph (h) of the definition ‘specified animal’ in subsection (1)</ref>.</p>
+          </content>
+        </subsection>
+      </section>
+    </body>
+  </act>
+</akomaNtoso>

@@ -81,7 +81,11 @@
                 35,000<cdq /> for <odq /><euro />33,000<cdq />, and</p>
             <p class="-3 17 0 left 1 0">(ii) by the substitution of the following Table for the
                 Table to that section:</p>
+            <!-- quotedStructure-->
+            <!-- table header - this is an idioscyncracy of how tables are understood
+            by drafters. There are actually three tables in this quotedStructure, but they are identified as one Table. -->
             <p class="0 0 0 center 1 0"><odq />TABLE</p>
+            <!-- table identifier for the first table (<num>Part 1</num>) -->
             <p class="0 0 0 center 1 0">PART 1</p>
             <table width="100%" class="0 0 0 left 0 0" xmlns:x="http://www.w3.org/TR/REC-html40">
                 <colgroup>
@@ -126,6 +130,7 @@
                     </td>
                 </tr>
             </table>
+            <!-- Table identifier for the second table (<num>Part 2</num>) -->
             <p class="0 0 0 center 1 0">PART 2</p>
             <table width="100%" class="0 0 0 left 0 0" xmlns:x="http://www.w3.org/TR/REC-html40">
                 <colgroup>
@@ -170,6 +175,7 @@
                     </td>
                 </tr>
             </table>
+            <!-- Table identifier for the third table (<num>Part 3</num>) -->
             <p class="0 0 0 center 1 0">PART 3</p>
             <table width="100%" class="0 0 0 left 0 0" xmlns:x="http://www.w3.org/TR/REC-html40">
                 <colgroup>
@@ -214,6 +220,7 @@
                     </td>
                 </tr>
             </table>
+            <!-- end quotedStructure -->
             <p class="0 0 0 right 1 0"><cdq />.</p>
         </sect>
     </body>

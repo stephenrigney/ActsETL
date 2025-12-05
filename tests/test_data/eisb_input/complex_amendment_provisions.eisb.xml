@@ -68,15 +68,29 @@
     </frontmatter>
     <body>
         <sect>
-            <number>12.</number>
+            <number>1.</number>
+            <title>
+                <p class="-3 11 0 left 1 0">
+                    <b>Interpretation (<i>Part 1</i>)</b>
+                </p>
+            </title>
+            <!-- definition section -->
+            <p class="-3 11 0 left 1 0"><b>1.</b> In this Act, <odq />Principal Act<cdq /> means
+                the Taxes Consolidation Act 1997.</p>
+        </sect>
+        <sect>
+            <number>2.</number>
             <title>
                 <p class="-3 11 0 left 1 0">
                     <b>Employer contributions to PRSAs and PEPPs</b>
                 </p>
             </title>
+            <!-- Mod starts here. The term "Principal Act" is a reference to a definitionTerm/def. -->
             <p class="-3 11 0 left 1 0"><b>12.</b> The Principal Act is amended<emdash /></p>
+            <!-- substition of new subsection for existing subsection in section 118 of Principal Act-->
             <p class="-3 14 0 left 1 0">(a) in section 118, by the substitution of the following
                 subsection for subsection (5):</p>
+            <!-- quotedStructure for new subsection-->
             <p class="-3 20 0 left 1 0"><odq />(5) Subsection (1) shall not apply to expense
                 incurred by the body corporate in or in connection with the provision for a director
                 or employee, or for the director<csq />s or employee<csq />s spouse, civil partner,
@@ -91,8 +105,10 @@
                 the meaning of section 787V), or</p>
             <p class="-3 23 0 left 1 0">(d) other like benefit to be given on the death or
                 retirement of the director or employee.<cdq />,</p>
+            <!-- insertion of new definitions in subsection (1) of section 787A of Principal Act-->
             <p class="-3 14 0 left 1 0">(b) in section 787A(1), by the insertion of the following
                 definitions:</p>
+            <!-- quotedStructure for new definitions -->
             <p class="0 20 0 left 1 0"><odq /> <osq />emoluments<csq /> has the same meaning as in
                 Chapter 4 of Part 42;</p>
             <p class="0 20 0 left 1 0"><osq />employer limit<csq />, in relation to a contribution
@@ -109,23 +125,31 @@
                 or in respect of which no emoluments are paid by the employer,</p>
             <p class="0 23 0 left 1 0">100 per cent of the employee<csq />s emoluments from that
                 employer in the previous year of assessment;<cdq />,</p>
+            <!-- insertion of new subsection in section 787E of Principal Act after subsection (1) -->
             <p class="-3 14 0 left 1 0">(c) in section 787E, by the insertion of the following
                 subsection after subsection (1):</p>
+            <!-- quotedStructure for new subsection-->
             <p class="-3 20 0 left 1 0"><odq />(1A) Where an employer makes a contribution to an
                 employee<csq />s PRSA and the total of such contributions exceeds the employer
                 limit, the sum of those contributions made, less the employer limit, shall be
                 chargeable to tax as income of the employee, in accordance with section 118(1).<cdq />
                 ,</p>
+            <!-- various amendments to section 787J of Principal Act-->
             <p class="-3 14 0 left 1 0">(d) in section 787J<emdash /></p>
+            <!-- quotedText for substitution of text in subsection (2) -->
             <p class="-3 17 0 left 1 0">(i) in subsection (2), by the substitution of <odq />Subject
                 to subsections (2A) and (3)<cdq /> for <odq />Subject to subsection (3)<cdq />, and</p>
+            <!-- insertion of new subsection in section 787J of Principal Act after subsection (2) -->
             <p class="-3 17 0 left 1 0">(ii) by the insertion of the following subsection after
                 subsection (2):</p>
+            <!-- quotedStructure for new subsection-->
             <p class="-3 20 0 left 1 0"><odq />(2A) Subsection (2) shall not apply to that portion
                 of an employer<csq />s contributions to an employee<csq />s PRSA that exceeds the
                 employer limit for that employee.<cdq />,</p>
+            <!-- insertion of new definitions in subsection (1) of section 787V of Principal Act-->
             <p class="-3 14 0 left 1 0">(e) in section 787V(1), by the insertion of the following
                 definitions:</p>
+            <!-- quotedStructure for new definitions -->
             <p class="0 20 0 left 1 0"><odq /> <osq />emoluments<csq /> has the same meaning as in
                 Chapter 4 of Part 42;</p>
             <p class="0 20 0 left 1 0"><osq />employer limit<csq />, in relation to a contribution
@@ -150,11 +174,15 @@
                 chargeable to tax as income of the employee, in accordance with section 118(1).<cdq />
                 ,</p>
             <p class="0 14 0 left 1 0">and</p>
+            <!-- amendments to section 787AD of Principal Act-->
             <p class="-3 14 0 left 1 0">(g) in section 787AD<emdash /></p>
+            <!-- quotedText for substitution of text in subsection (2) -->
             <p class="-3 17 0 left 1 0">(i) in subsection (2), by the substitution of <odq />Subject
                 to subsections (2A) and (3)<cdq /> for <odq />Subject to subsection (3)<cdq />, and</p>
+            <!-- insertion of new subsection in section 787AD of Principal Act after subsection (2) -->
             <p class="-3 17 0 left 1 0">(ii) by the insertion of the following subsection after
                 subsection (2):</p>
+            <!-- quotedStructure for new subsection-->
             <p class="-3 20 0 left 1 0"><odq />(2A) Subsection (2) shall not apply to that portion
                 of an employer<csq />s contributions to an employee<csq />s PEPP that exceeds the
                 employer limit for that employee.<cdq />.</p>
