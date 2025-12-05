@@ -20,7 +20,7 @@ from actsetl.parsers.eisb_structure import (
     INLINE_CONTAINER_TAGS,
 )
 
-from actsetl.parsers.eisb_provisions import AmendmentMetadata, Provision
+from actsetl.parsers.eisb_provisions import AmendmentMetadata, Provision, ODQ, CDQ
 
 
 # Define the path to the test data directory
@@ -75,8 +75,7 @@ class TestTransformXml:
 
     def test_transform_xml_with_quotes(self):
         """Test that curly quotes are properly converted."""
-        input_xml = '''
-        <?xml version="1.0"?>
+        input_xml = '''<?xml version="1.0"?>
         <root>
             <p><odq/>Hello World<cdq/></p>
         </root>
@@ -87,8 +86,8 @@ class TestTransformXml:
         
         # Check that opening and closing curly quotes are present
         p_text = result.find(".//p").text
-        assert "\u201c" in p_text  # opening curly quote
-        assert "\u201d" in p_text  # closing curly quote
+        assert ODQ in p_text  # opening curly quote
+        assert CDQ in p_text  # closing curly quote
 
     def test_transform_xml_irish_characters(self):
         """Test transformation of Irish fada characters."""
@@ -155,27 +154,27 @@ class TestGenerateChildEid:
 
     def test_generate_child_eid_with_parent(self):
         """Test generating child eId with parent prefix."""
-        result = _generate_child_eid("sect_1", "subsect_1")
-        assert result == "sect_1_subsect_1"
+        result = _generate_child_eid("sec_1", "subsec_1")
+        assert result == "sec_1__subsec_1"
 
     def test_generate_child_eid_no_parent(self):
         """Test generating child eId without parent prefix."""
-        result = _generate_child_eid(None, "subsect_1")
-        assert result == "subsect_1"
+        result = _generate_child_eid(None, "subsec_1")
+        assert result == "subsec_1"
 
     def test_generate_child_eid_empty_parent(self):
         """Test generating child eId with empty parent."""
-        result = _generate_child_eid("", "subsect_1")
-        assert result == "subsect_1"
+        result = _generate_child_eid("", "subsec_1")
+        assert result == "subsec_1"
 
     def test_generate_child_eid_no_child(self):
         """Test generating child eId without child returns None."""
-        result = _generate_child_eid("sect_1", None)
+        result = _generate_child_eid("sec_1", None)
         assert result is None
 
     def test_generate_child_eid_empty_child(self):
         """Test generating child eId with empty child returns None."""
-        result = _generate_child_eid("sect_1", "")
+        result = _generate_child_eid("sec_1", "")
         assert result is None
 
 
@@ -184,10 +183,10 @@ class TestAppendSubdiv:
 
     def test_append_subdiv_basic(self):
         """Test appending a subdivision to parent."""
-        parent = E.section({"eId": "sect_1"})
+        parent = E.section({"eId": "sec_1"})
         subdiv = Provision(
             tag="subsection",
-            eid="subsect_1",
+            eid="subsec_1",
             ins=False,
             hang=0,
             margin=0,
@@ -201,14 +200,14 @@ class TestAppendSubdiv:
         
         assert result is subdiv.xml
         assert subdiv.xml in list(parent)
-        assert subdiv.xml.get("eId") == "sect_1_subsect_1"
+        assert subdiv.xml.get("eId") == "sec_1__subsec_1"
 
     def test_append_subdiv_converts_content_to_intro(self):
         """Test that content preceding subdiv is converted to intro."""
-        parent = E.section({"eId": "sect_1"}, E.content())
+        parent = E.section({"eId": "sec_1"}, E.content())
         subdiv = Provision(
             tag="subsection",
-            eid="subsect_1",
+            eid="subsec_1",
             ins=False,
             hang=0,
             margin=0,
@@ -228,7 +227,7 @@ class TestAppendSubdiv:
         """Test that _append_subdiv raises ValueError for None parent."""
         subdiv = Provision(
             tag="subsection",
-            eid="subsect_1",
+            eid="subsec_1",
             ins=False,
             hang=0,
             margin=0,
@@ -252,10 +251,10 @@ class TestSectionHierarchy:
 
     def test_section_hierarchy_single_element(self):
         """Test section_hierarchy with single element returns that element."""
-        section = E.section({"eId": "sect_1"})
+        section = E.section({"eId": "sec_1"})
         subdiv = Provision(
             tag="section",
-            eid="sect_1",
+            eid="sec_1",
             ins=False,
             hang=0,
             margin=0,
@@ -271,13 +270,13 @@ class TestSectionHierarchy:
 
     def test_section_hierarchy_nested_elements(self):
         """Test section_hierarchy creates proper nesting."""
-        section = E.section({"eId": "sect_1"})
+        section = E.section({"eId": "sec_1"})
         subsection = E.subsection()
         paragraph = E.paragraph()
         
         subdivs = [
-            Provision("section", "sect_1", False, 0, 0, "left", section, "", 0),
-            Provision("subsection", "subsect_1", False, 0, 0, "left", subsection, "", 1),
+            Provision("section", "sec_1", False, 0, 0, "left", section, "", 0),
+            Provision("subsection", "subsec_1", False, 0, 0, "left", subsection, "", 1),
             Provision("paragraph", "para_a", False, 0, 0, "left", paragraph, "", 2),
         ]
         
@@ -290,11 +289,11 @@ class TestSectionHierarchy:
 
     def test_section_hierarchy_inline_containers(self):
         """Test that inline containers (tables, etc.) go into content."""
-        section = E.section({"eId": "sect_1"})
+        section = E.section({"eId": "sec_1"})
         table = E.table()
         
         subdivs = [
-            Provision("section", "sect_1", False, 0, 0, "left", section, "", 0),
+            Provision("section", "sec_1", False, 0, 0, "left", section, "", 0),
             Provision("table", None, False, 0, 0, "left", table, "", 1),
         ]
         
@@ -428,8 +427,8 @@ class TestBuildActiveModifications:
         """Test with single modification."""
         meta = AmendmentMetadata(
             type="substitution",
-            source_eId="#sect_1_mod_1",
-            destination_uri="#principal_act/sect_5",
+            source_eId="#sec_1__mod_1",
+            destination_uri="#principal_act/sec_5",
             position=None,
             old_text="old text",
             new_text="new text"
@@ -443,8 +442,8 @@ class TestBuildActiveModifications:
         
         tm = textual_mods[0]
         assert tm.get("type") == "substitution"
-        assert tm.find("source").get("href") == "#sect_1_mod_1"
-        assert tm.find("destination").get("href") == "#principal_act/sect_5"
+        assert tm.find("source").get("href") == "#sec_1__mod_1"
+        assert tm.find("destination").get("href") == "#principal_act/sec_5"
         assert tm.find("old").text == "old text"
         assert tm.find("new").text == "new text"
 
@@ -452,8 +451,8 @@ class TestBuildActiveModifications:
         """Test with modification that has position."""
         meta = AmendmentMetadata(
             type="insertion",
-            source_eId="#sect_1_mod_1",
-            destination_uri="#principal_act/sect_5",
+            source_eId="#sec_1__mod_1",
+            destination_uri="#principal_act/sec_5",
             position="after",
             old_text=None,
             new_text=None

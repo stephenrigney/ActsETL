@@ -68,7 +68,8 @@ def _generate_child_eid(parent_eid: Optional[str], child_eid: Optional[str]) -> 
     if not child_eid:
         return None
     if parent_eid:
-        return f"{parent_eid}_{child_eid}"
+        # Use double underscore to demarcate context boundaries per eId conventions
+        return f"{parent_eid}__{child_eid}"
     # Fallback: if parent missing, return the child id as-is but log warning
     log.debug("Parent missing eId; using child eId '%s' without parent prefix", child_eid)
     return child_eid

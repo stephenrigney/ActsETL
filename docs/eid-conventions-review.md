@@ -12,33 +12,57 @@ Summary
 - The pattern for an eId snippet is `name`_`number`.
 - Part, schedule and section level eIds consist solely of the eId for the element if they they are not inserted elements (an inserted element being an element enclosed in a <mod> structure).
 - Other elements are prefixed by their eId of their parent container or context.
-- Inserted elements are prefixed by the eId of their mod element parent.
+- Inserted (<mod>) elements are prefixed by the eId of their mod element parent.
 - Double underscores between context prefixes to demarcate boundaries clearly.
 - Structural markers first, normalized term slugs second.
 
+## Element eId names
 
-Patterns
-- Part: `part_1`
-- Chapter: `part_1__chp_1`
-- Section: `sec_1`
-- Schedule: `schedule_1`
-- Subsection: `sec_1__subsec_1`
-- Paragraph (lettered): `sec_1__subsec_1__para_a`
-- Definitions list container: `sec_1__subsec_1__definitions`
-- Definition item: `sec_1__subsec_1__def__act_of_1967`
-- Nested list under a definition: `sec_1__subsec_1__definition__specified_animal__list`
+| Element | eId name |
+|:--|:--|
+| part | `part` |
+| chapter | `chp` |
+| section | `sec` |
+| subsection | `subsec` |
+| paragraph | `para` |
+| subparagraph | `subpara` |
+| slause | `cl` |
+| subclause | `subcl` |
+| mod | `mod` |
+| quotedStructure | `qstr` |
+| quotedText | `qtext` |
+| hcontainer/@name='schedule' | `schedule` |
+| hcontainer/@name='definitions' | `definitions` |
+| hcontainer/@name='definitionTerm' | `def` |
+| blocklist | `list` |
 
-Slug Rules
-- Lower-case; spaces → `_`; strip punctuation; ASCII-only if possible.
+## Pattern examples
+
+| Pattern | Example |
+|:--|:--|
+| Part | `part_1` |
+| Chapter | `part_1__chp_1` |
+| Section | `sec_1` |
+| Schedule | `schedule_1` |
+| Subsection | `sec_1__subsec_1` |
+| Paragraph (lettered) | `sec_1__subsec_1__para_a` |
+| Definitions list container | `sec_1__subsec_1__definitions` |
+| Definition item | `sec_1__subsec_1__def__act_of_1967` |
+| Nested list under a definition | `sec_1__subsec_1__def__specified_animal__list` |
+| Section inserted at section level | `sec_1__mod_1__sec_71A` |
+| Nested inserted provision inserted at paragraph level | `sec_1__subsec_1__para_a__mod_1__sec_71A__para_a_subpara_a` |
+
+## Slug Rules
+- Lower-case; spaces → `_`; strip punctuation.
 - Use underscore `_` only within slugs; avoid hyphens.
 - Deterministic slugs derived from the defined term for readability, not raw text.
 
-Rationale
-- Double underscores reflect context boundaries in line with AN Section 5 guidance.
-- Structural semantics (`subsect`, `para`, `definition`) ensure clarity and stability.
+## Rationale
+- Double underscores reflect context boundaries in line with AN convention.
+- Structural semantics (`subsec`, `para`, `definition`) ensure clarity and stability.
 - Readable slugs assist cross-reference without coupling to natural-language text.
 
-Recommendations
+## Recommendations
 - Adopt the double-underscore scheme project-wide for hierarchical eIds.
 - Ensure every addressable unit (definition items, nested points) has an `eId`.
 - Keep real numbering in `<num>` only where published (e.g., `(a)…(h)`); never use empty `<num>` as anchors.

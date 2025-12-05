@@ -11,7 +11,7 @@ Document Envelope
 - Body: `body` holds structural content (sections, subsections, containers).
 
 Section Pattern
-- Section: `section eId="sect_{num}"` with heading and number.
+- Section: `section eId="sec_{num}"` with heading and number.
 - Subdivision:
   - Intro: `subsection > intro > p` for the opening sentence (e.g., “In this Part—”).
   - Definitions group: `subsection > hcontainer name="definitions"` as the container for all terms.
@@ -21,10 +21,10 @@ Section Pattern
 
 Identifiers (eId)
 - Strategy: Hierarchical, double-underscore separators between contexts.
-  - Section: `sect_{number}`
-  - Subsection: `sect_{number}__subsect_{index}`
-  - Definitions group: `sect_{number}__subsect_{index}__definitions`
-  - Term: `sect_{number}__subsect_{index}__def__{slug}`
+  - Section: `sec_{number}`
+  - Subsection: `sec_{number}__subsec_{index}`
+  - Definitions group: `sec_{number}__subsec_{index}__definitions`
+  - Term: `sec_{number}__subsec_{index}__def__{slug}`
   - Nested list: suffix `__list` and lettered items `__para_{a|b|...}`.
 - Slugs: Lowercase, underscore-separated tokens derived from the term headword; stable across conversions.
 
@@ -49,7 +49,7 @@ ActsETL Refactoring Prompt
   - `build_definition_term(defn) -> etree._Element` emitting `hcontainer[name="definitionTerm"]` with `content`.
   - `build_lettered_blocklist(items) -> etree._Element` when present.
 - eId generation:
-  - `sect_eid = f"sect_{section_num}"`, `subsect_eid = f"{sect_eid}__subsect_{index}"`.
+  - `sec_eid = f"sec_{section_num}"`, `subsect_eid = f"{sec_eid}__subsec_{index}"`.
   - `def_eid = f"{subsect_eid}__def__{slug}"`, with child eIds for lists.
 - Referencing:
   - Populate `def@refersTo` for anchors; resolve intra-document `ref@href` via `section_hierarchy` mapping.

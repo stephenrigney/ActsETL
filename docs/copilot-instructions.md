@@ -99,7 +99,7 @@ python -m debugpy --listen 0.0.0.0:5678 --wait-for-client \
 ### eId Generation
 eIds use hierarchical concatenation with underscore separators:
 ```python
-# Parent: "sec_3", Child: "subsect_1" → "sec_3_subsect_1"
+# Parent: "sec_3", Child: "subsec_1" → "sec_3__subsec_1"
 _generate_child_eid(parent_eid, child_eid)
 ```
 Missing parent eIds logged but child used as-is (fallback for robustness).

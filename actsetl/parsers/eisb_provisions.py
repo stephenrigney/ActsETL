@@ -12,11 +12,11 @@ from lxml import etree
 from lxml.builder import E
 
 
-from actsetl.parsers.patterns import RegexPatternLibrary
+from actsetl.parsers.patterns import RegexPatternLibrary, ODQ, CDQ
 
 log = logging.getLogger(__name__)
 
-ODQ, CDQ, OSQ, CSQ = "“", "”", '‘', '’'
+
 
 INSERTED_SECTION_THRESHOLD, PARAGRAPH_MARGIN_THRESHOLD, SUBPARAGRAPH_MARGIN_THRESHOLD = 8, 14, 17
 
@@ -99,7 +99,7 @@ class AmendmentParser:
                 self.state = "PARSING_INSTRUCTION"
                 self.current_amendment_details = details
                 if details.get('inline'):
-                    mod_eid = f"{self.section_eid}_mod_{self.mod_counter}"
+                    mod_eid = f"{self.section_eid}__mod_{self.mod_counter}"
                     mod_block = E.mod(
                         E.quotedText(details['new_text'], startQuote="“", endQuote="”"),
                         eId=mod_eid
@@ -122,7 +122,7 @@ class AmendmentParser:
             text = provision.text or ""
             if (text.startswith(ODQ) and ODQ not in text[1:]) or text == ODQ:
                 self.state = "CONSUMING_CONTENT"
-                mod_eid = f"{self.section_eid}_mod_{self.mod_counter}"
+                mod_eid = f"{self.section_eid}__mod_{self.mod_counter}"
                 self.current_mod_block = E.mod(E.quotedStructure(startQuote="“"), eId=mod_eid)
 
                 dest_uri = self._generate_destination_uri(self.current_amendment_details.get('destination_text', ''))
@@ -505,7 +505,38 @@ def make_eid_snippet(label: str, num:str):
     """
     Generate partial eId.
     """
-    return f"{label}_{''.join(d for d in num if d.isalnum())}"
+    # Map a set of known label synonyms to canonical short eId tokens
+    canonical = {
+        'sect': 'sec', 'section': 'sec', 'sec': 'sec',
+        'subsect': 'subsec', 'subsection': 'subsec', 'subsec': 'subsec',
+        'para': 'para', 'paragraph': 'para',
+        'subpara': 'subpara', 'subparagraph': 'subpara',
+        'clause': 'cl', 'cl': 'cl', 'slause': 'cl',
+        'subclause': 'subcl', 'subcl': 'subcl',
+        'part': 'part', 'chapter': 'chp', 'chp': 'chp',
+        'mod': 'mod', 'quotedStructure': 'qstr', 'quotedText': 'qtext',
+        'hcontainer': 'hcontainer',
+        'schedule': 'schedule', 'definitions': 'definitions', 'definitionTerm': 'def',
+        'list': 'list',
+    }
+
+    # Determine canonical label
+    label_key = canonical.get(label, label)
+
+    # Create a deterministic slug from the provided num string
+    if num is None:
+        slug = ''
+    else:
+        s = str(num).lower()
+        # Replace any run of characters that are not alphanumeric with underscore
+        import re
+        slug = re.sub(r"[^a-z0-9]+", "_", s).strip("_")
+
+    if not slug:
+        # fallback to numeric-only filtering if nothing remains
+        slug = ''.join(d for d in (num or "") if d.isalnum())
+
+    return f"{label_key}_{slug}"
 
 def parse_table(table: etree):
     """

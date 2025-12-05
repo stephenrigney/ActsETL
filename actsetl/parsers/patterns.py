@@ -3,7 +3,7 @@ Common data structures, constants, and classes for EISB parsers.
 """
 import re
 
-
+ODQ, CDQ, OSQ, CSQ = "“", "”", '‘', '’'
 
 # --- Constants ---
 
@@ -25,7 +25,7 @@ class RegexPatternLibrary:
             re.IGNORECASE
         )
         self.amendment_inline_substitution = re.compile(
-            r'''by the substitution of (?P<new>["'"']["'"']?[^"'"']+'["'"']?) for (?P<old>["'"']["'"']?[^"'"']+'["'"'])'''
+            r"by the substitution of (?P<new>" + ODQ + ".+" + CDQ + ") for (?P<old>" + ODQ + ".+" + CDQ + ")"
         )
         
         # Destination URI pattern
@@ -55,13 +55,12 @@ class RegexPatternLibrary:
         # Check inline substitution first (more specific)
         match = self.amendment_inline_substitution.search(text)
         if match:
-            # Strip both straight and curly quotes
-            quote_chars = '"\'' + "'"
+
             return {
                 'type': 'substitution',
                 'inline': True,
-                'new_text': match.group('new').strip(quote_chars),
-                'old_text': match.group('old').strip(quote_chars)
+                'new_text': match.group('new'),
+                'old_text': match.group('old')
             }
         
         # General substitution (less specific)

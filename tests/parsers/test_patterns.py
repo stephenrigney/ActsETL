@@ -51,13 +51,13 @@ def test_regex_library():
     
     # Test inline substitution
     result = patterns.match_amendment_instruction(
-        "by the substitution of 'new text' for 'old text'"
+        "by the substitution of “new text” for “old text”"
     )
     assert result is not None
     assert result['type'] == 'substitution'
     assert result['inline'] is True
-    assert result['new_text'] == 'new text'
-    assert result['old_text'] == 'old text'
+    assert result['new_text'] == '“new text”'
+    assert result['old_text'] == '“old text”'
     print("✓ Inline substitution pattern works")
     
     # Test provision type matching
